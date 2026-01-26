@@ -1,0 +1,15 @@
+
+[
+    {
+        "id": "barber-1",
+        "name": "John Doe"
+    },
+    {
+        "id": "barber-2",
+        "name": "Alex Smith"
+    },
+    {
+        "id": "barber-3",
+        "name": "Michael Johnson"
+    }
+]

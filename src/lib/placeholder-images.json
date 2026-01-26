@@ -1,0 +1,10 @@
+{
+  "placeholderImages": [
+    {
+      "id": "landing-hero",
+      "description": "A calm and professional looking office environment, suggesting an appointment setting.",
+      "imageUrl": "https://images.unsplash.com/photo-1578991624414-276ef23a534f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxvZmZpY2UlMjByZWNlcHRpb258ZW58MHx8fHwxNzY4NDE1MzcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "office reception"
+    }
+  ]
+}
