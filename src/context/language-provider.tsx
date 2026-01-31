@@ -6,7 +6,7 @@ import en from '@/locales/en.json';
 import ur from '@/locales/ur.json';
 
 // Define the shape of your translations
-type Translations = typeof en;
+export type Translations = typeof en;
 
 interface LanguageContextType {
   locale: 'en' | 'ur';

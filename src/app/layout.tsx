@@ -7,6 +7,8 @@ import { AuthProvider } from '@/components/auth-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/context/language-provider';
+import { SettingsProvider } from '@/context/settings-provider';
+import { SaaSProvider } from '@/context/saas-provider';
 
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
 const lato = Lato({
@@ -32,17 +34,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${oswald.variable} ${lato.variable} ${notoNastaliqUrdu.variable}`} suppressHydrationWarning>
-      <body className="font-body antialiased">
+      <body className="font-body antialiased" suppressHydrationWarning>
         <LanguageProvider>
           <ThemeProvider storageKey="app-ui-theme">
             <FirebaseClientProvider>
-              <AuthProvider>
-                <div className="flex min-h-screen flex-col">
-                  <Header />
-                  <main className="flex-1">{children}</main>
-                </div>
-                <Toaster />
-              </AuthProvider>
+              <SettingsProvider>
+                <AuthProvider>
+                  <SaaSProvider> {/* SaaSProvider injected here */}
+                    <div className="flex min-h-screen flex-col">
+                      <Header />
+                      <main className="flex-1 bg-background">{children}</main> {/* Added bg-background class */}
+                    </div>
+                    <Toaster />
+                  </SaaSProvider>
+                </AuthProvider>
+              </SettingsProvider>
             </FirebaseClientProvider>
           </ThemeProvider>
         </LanguageProvider>

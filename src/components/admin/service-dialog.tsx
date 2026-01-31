@@ -40,10 +40,9 @@ const serviceSchema = z.object({
   duration: z.coerce.number().int().min(5, "Duration must be at least 5 minutes."),
   isPackage: z.boolean().default(false),
   enabled: z.boolean().default(true),
-  maxQuantity: z.coerce.number().int().min(1).optional(),
 }).refine(data => !data.discountedPrice || data.discountedPrice < data.price, {
-    message: "Discounted price must be less than the original price.",
-    path: ["discountedPrice"],
+  message: "Discounted price must be less than the original price.",
+  path: ["discountedPrice"],
 });
 
 interface ServiceDialogProps {
@@ -68,7 +67,6 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
       duration: 30,
       isPackage: false,
       enabled: true,
-      maxQuantity: 50,
     },
   });
 
@@ -77,7 +75,6 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
       form.reset({
         ...service,
         discountedPrice: service.discountedPrice || undefined,
-        maxQuantity: service.maxQuantity || 50,
       });
     } else {
       form.reset({
@@ -88,7 +85,6 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
         duration: 30,
         isPackage: false,
         enabled: true,
-        maxQuantity: 50,
       });
     }
   }, [service, form, isOpen]);
@@ -170,62 +166,46 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
               )}
             />
             <div className="grid grid-cols-2 gap-4">
-               <FormField
+              <FormField
                 control={form.control}
                 name="price"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>Price (PKR)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="2500" {...field} />
+                      <Input type="number" placeholder="2500" {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
-                 <FormField
+              />
+              <FormField
                 control={form.control}
                 name="discountedPrice"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>Discounted Price (Optional)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="2200" {...field} value={field.value ?? ''} />
+                      <Input type="number" placeholder="2200" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
+              />
             </div>
-             <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
+            <FormField
+              control={form.control}
+              name="duration"
+              render={({ field }) => (
                 <FormItem>
-                <FormLabel>Duration (min)</FormLabel>
-                <FormControl>
+                  <FormLabel>Duration (min)</FormLabel>
+                  <FormControl>
                     <Input type="number" placeholder="30" {...field} />
-                </FormControl>
-                <FormMessage />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
-            )}
+              )}
             />
-             <FormField
-                control={form.control}
-                name="maxQuantity"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Max Quantity (Pax)</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="e.g., 5" {...field} />
-                    </FormControl>
-                     <FormDescription>
-                      Maximum number of people for this service.
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
             <FormField
               control={form.control}
               name="isPackage"

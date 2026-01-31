@@ -2,6 +2,7 @@
 
 
 
+
 export interface StaffPermissions {
   canViewBookings: boolean;
   canAddWalkInBookings: boolean;
@@ -16,14 +17,33 @@ export interface AppUser {
   email: string | null;
   name: string | null;
   role: 'client' | 'admin' | 'staff';
+  shopId?: string; // Mandatory for admin/staff, optional for clients (or linked to shop they are booking with)
   permissions?: StaffPermissions;
   enabled?: boolean;
   homepageLayout?: string[];
 }
 
+export interface Shop {
+  id: string;
+  name: string;
+  ownerId: string;
+  plan: 'free' | 'basic' | 'pro';
+  customerCount: number;
+  maxCustomers: number;
+  status: 'active' | 'suspended';
+  createdAt: any;
+  adminPin?: string;
+  featureLocks?: Record<string, boolean>;
+  settings?: {
+    themeColor?: string;
+    logoUrl?: string;
+  };
+}
+
 export interface Service {
   id: string;
-  name:string;
+  shopId: string;
+  name: string;
   isPackage: boolean;
   price: number;
   discountedPrice?: number;
@@ -35,12 +55,14 @@ export interface Service {
 
 export interface Barber {
   id: string;
+  shopId: string;
   name: string;
   phone?: string;
 }
 
 export interface Appointment {
-  id:string;
+  id: string;
+  shopId: string;
   clientId: string;
   clientName: string | null;
   services: { id: string, name: string, price: number, duration: number, quantity: number }[];
@@ -59,6 +81,7 @@ export interface Appointment {
 
 export interface Expense {
   id: string;
+  shopId: string;
   name: string;
   amount: number;
   createdAt: any;
@@ -67,14 +90,16 @@ export interface Expense {
 
 export interface ShopSettings {
   id?: string;
+  shopId: string;
   openingTime: string; // e.g. "09:00"
   closingTime: string; // e.g. "18:00"
 }
 
 export interface PaymentMethod {
-    id: string;
-    methodName: string;
-    accountHolderName: string;
-    accountNumber: string;
+  id: string;
+  shopId: string;
+  methodName: string;
+  accountHolderName: string;
+  accountNumber: string;
 }
-    
+

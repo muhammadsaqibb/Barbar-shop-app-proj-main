@@ -39,18 +39,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(true);
         const userDocRef = doc(firestore, 'users', firebaseUser.uid);
 
-        userDocUnsubscribe = onSnapshot(userDocRef, 
+        userDocUnsubscribe = onSnapshot(userDocRef,
           (docSnap) => {
             if (docSnap.exists()) {
               const userData = docSnap.data();
               if (userData.enabled === false) {
-                 firebaseSignOut(auth);
-                 setUser(null);
-                 toast({
-                    variant: 'destructive',
-                    title: t('account_disabled_title'),
-                    description: t('account_disabled_desc'),
-                 });
+                firebaseSignOut(auth);
+                setUser(null);
+                toast({
+                  variant: 'destructive',
+                  title: t('account_disabled_title'),
+                  description: t('account_disabled_desc'),
+                });
               } else {
                 setUser({ uid: firebaseUser.uid, ...userData } as AppUser);
               }
@@ -60,11 +60,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 name: firebaseUser.displayName,
-                role: 'client'
+                role: 'client',
+                shopId: (firebaseUser as any).shopId || undefined, // Placeholder for future use
               });
             }
             setLoading(false);
-          }, 
+          },
           (error) => {
             console.error("AuthProvider: Error listening to user document:", error);
             setUser(null);
