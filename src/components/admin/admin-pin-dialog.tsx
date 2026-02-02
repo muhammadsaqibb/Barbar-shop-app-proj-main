@@ -14,6 +14,7 @@ import { useSaaS } from "@/context/saas-provider";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Delete } from "lucide-react";
 import { useTranslation } from "@/context/language-provider";
+import useSound from "@/hooks/use-sound";
 
 interface AdminPinDialogProps {
     open: boolean;
@@ -34,7 +35,53 @@ export function AdminPinDialog({
     const { currentShop } = useSaaS();
     const { toast } = useToast();
     const { t } = useTranslation();
+    const playSound = useSound();
     const [error, setError] = useState(false);
+
+    // Lockout logic
+    const [attempts, setAttempts] = useState(0);
+    const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+    const [timeLeft, setTimeLeft] = useState(0);
+
+    useEffect(() => {
+        const savedLockout = localStorage.getItem('admin_pin_lockout');
+        const savedAttempts = localStorage.getItem('admin_pin_attempts');
+
+        if (savedLockout) {
+            const expiry = parseInt(savedLockout, 10);
+            if (Date.now() < expiry) {
+                setLockoutTime(expiry);
+                setTimeLeft(Math.ceil((expiry - Date.now()) / 1000));
+            } else {
+                localStorage.removeItem('admin_pin_lockout');
+                localStorage.setItem('admin_pin_attempts', '0');
+            }
+        }
+
+        if (savedAttempts) {
+            setAttempts(parseInt(savedAttempts, 10));
+        }
+    }, [open]);
+
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (lockoutTime && timeLeft > 0) {
+            timer = setInterval(() => {
+                const newTime = Math.ceil((lockoutTime - Date.now()) / 1000);
+                if (newTime <= 0) {
+                    setLockoutTime(null);
+                    setTimeLeft(0);
+                    setAttempts(0);
+                    localStorage.removeItem('admin_pin_lockout');
+                    localStorage.setItem('admin_pin_attempts', '0');
+                    clearInterval(timer);
+                } else {
+                    setTimeLeft(newTime);
+                }
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [lockoutTime, timeLeft]);
 
     useEffect(() => {
         if (open) {
@@ -44,6 +91,7 @@ export function AdminPinDialog({
     }, [open]);
 
     const handleNumberClick = (num: number) => {
+        if (lockoutTime) return;
         if (pin.length < 4) {
             const newPin = pin + num;
             setPin(newPin);
@@ -56,42 +104,52 @@ export function AdminPinDialog({
     };
 
     const handleDelete = () => {
+        if (lockoutTime) return;
         setPin(prev => prev.slice(0, -1));
         setError(false);
     };
 
     const validatePin = (inputPin: string) => {
-        // If no PIN is set, allow access (or maybe prompt to set one?)
-        // For now, if no PIN is set, any 4 digits work, or we block? 
-        // Let's assume if no PIN is set, we treat "0000" as default or prompt user to set it first in settings.
-        // Ideally, currentShop.adminPin should be checked.
-
-        const correctPin = currentShop?.adminPin;
-
-        if (!correctPin) {
-            // If no PIN set, maybe allow plain access or use default "0000"
-            if (inputPin === "0000") {
-                onSuccess();
-                onOpenChange(false);
-            } else {
-                setError(true);
-                toast({
-                    variant: "destructive",
-                    title: "Invalid PIN",
-                    description: "Default PIN is 0000. Please set a custom PIN in Settings.",
-                });
-                setPin("");
-            }
-            return;
-        }
+        const correctPin = currentShop?.adminPin || "0000"; // Default "0000" if none set
 
         if (inputPin === correctPin) {
+            setAttempts(0);
+            localStorage.setItem('admin_pin_attempts', '0');
+            playSound('access-granted');
             onSuccess();
             onOpenChange(false);
         } else {
             setError(true);
             setPin("");
+
+            const newAttempts = attempts + 1;
+            setAttempts(newAttempts);
+            localStorage.setItem('admin_pin_attempts', newAttempts.toString());
+
+            if (newAttempts >= 3) {
+                const lockoutExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+                setLockoutTime(lockoutExpiry);
+                setTimeLeft(300);
+                localStorage.setItem('admin_pin_lockout', lockoutExpiry.toString());
+                toast({
+                    variant: "destructive",
+                    title: "Security Lockout",
+                    description: "Too many failed attempts. Try again in 5 minutes.",
+                });
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Incorrect PIN",
+                    description: `You have ${3 - newAttempts} attempts remaining.`,
+                });
+            }
         }
+    };
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     return (
@@ -99,13 +157,15 @@ export function AdminPinDialog({
             <DialogContent className="sm:max-w-xs">
                 <DialogHeader>
                     <DialogTitle className="text-center flex flex-col items-center gap-2">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${lockoutTime ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
                             <Lock className="h-5 w-5" />
                         </div>
-                        {title}
+                        {lockoutTime ? "Security Lockout" : title}
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                        {description}
+                        {lockoutTime
+                            ? `Too many failed attempts. Please wait ${formatTime(timeLeft)} before trying again.`
+                            : description}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -123,7 +183,7 @@ export function AdminPinDialog({
                     ))}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 [&>button]:h-14 [&>button]:text-xl [&>button]:font-semibold">
+                <div className={`grid grid-cols-3 gap-2 [&>button]:h-14 [&>button]:text-xl [&>button]:font-semibold ${lockoutTime ? 'opacity-50 pointer-events-none' : ''}`}>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                         <Button
                             key={num}
@@ -150,6 +210,12 @@ export function AdminPinDialog({
                         <Delete className="h-6 w-6" />
                     </Button>
                 </div>
+
+                {!lockoutTime && attempts > 0 && (
+                    <p className="text-center text-xs text-destructive font-medium animate-pulse">
+                        {3 - attempts} attempts remaining
+                    </p>
+                )}
             </DialogContent>
         </Dialog>
     );

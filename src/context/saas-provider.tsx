@@ -12,7 +12,7 @@ interface SaaSContextType {
     isLimitReached: (feature: 'customers' | 'bookings') => boolean;
 }
 
-const SaaSContext = createContext<SaaSContextType | undefined>(undefined);
+export const SaaSContext = createContext<SaaSContextType | undefined>(undefined);
 
 export const SaaSProvider = ({ children }: { children: ReactNode }) => {
     const { firestore } = useFirebase();

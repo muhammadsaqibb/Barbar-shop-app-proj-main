@@ -11,14 +11,16 @@ interface ProtectedActionProps {
     onSuccess?: () => void;
     bypass?: boolean;
     featureId?: string;
+    href?: string;
 }
 
-export function ProtectedAction({ children, onSuccess, bypass = false, featureId }: ProtectedActionProps) {
+export function ProtectedAction({ children, onSuccess, bypass = false, featureId, href }: ProtectedActionProps) {
     const [showPin, setShowPin] = useState(false);
     const router = useRouter();
     const { currentShop } = useSaaS();
 
     const childProps = (children as any).props || {};
+    const targetHref = href || childProps.href;
 
     const handleClick = (e: React.MouseEvent) => {
         if (bypass) {
@@ -49,8 +51,8 @@ export function ProtectedAction({ children, onSuccess, bypass = false, featureId
             onSuccess();
         }
 
-        if (childProps.href) {
-            router.push(childProps.href);
+        if (targetHref) {
+            router.push(targetHref);
         } else if (childProps.onClick) {
             childProps.onClick({ ...new MouseEvent('click'), preventDefault: () => { }, stopPropagation: () => { } });
         }

@@ -65,7 +65,7 @@ export default function Header() {
         title: t('new_booking_request'),
         description: t('new_booking_description'),
       });
-      playSound('notification');
+      playSound('reminder');
     }
 
     prevPendingCount.current = pendingCount;
@@ -79,26 +79,32 @@ export default function Header() {
   const NavLinks = () => (
     <>
       {(user?.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewOverview)) && (
-        <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
-          <Link href="/overview">{t('overview')}</Link>
-        </Button>
+        <ProtectedAction featureId="overview" href="/overview">
+          <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
+            <Link href="/overview">{t('overview')}</Link>
+          </Button>
+        </ProtectedAction>
       )}
       {(user?.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewBookings)) && (
-        <Button variant="ghost" asChild className={cn("text-white hover:text-white hover:bg-white/20", pendingCount > 0 && "animate-vibrate-reminder")}>
-          <Link href="/admin/dashboard" className="relative">
-            {t('bookings')}
-            {pendingCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                {pendingCount}
-              </span>
-            )}
-          </Link>
-        </Button>
+        <ProtectedAction featureId="bookings" href="/admin/dashboard">
+          <Button variant="ghost" asChild className={cn("text-white hover:text-white hover:bg-white/20", pendingCount > 0 && "animate-vibrate-reminder")}>
+            <Link href="/admin/dashboard" className="relative">
+              {t('bookings')}
+              {pendingCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
+          </Button>
+        </ProtectedAction>
       )}
       {user?.role === 'admin' && (
-        <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
-          <Link href="/admin/users">{t('manage_users')}</Link>
-        </Button>
+        <ProtectedAction featureId="manage_users" href="/admin/users">
+          <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
+            <Link href="/admin/users">{t('manage_users')}</Link>
+          </Button>
+        </ProtectedAction>
       )}
     </>
   );
@@ -140,34 +146,41 @@ export default function Header() {
               <MobileLink href="/my-appointments" icon={<BookCopy />}>{t('history_title')}</MobileLink>
 
               {(user.role === 'admin' || (user.role === 'staff' && user.permissions?.canViewOverview)) && (
-                <MobileLink href="/overview" icon={<LayoutDashboard />}>{t('overview')}</MobileLink>
+                <ProtectedAction featureId="overview" href="/overview">
+                  <MobileLink href="/overview" icon={<LayoutDashboard />}>{t('overview')}</MobileLink>
+                </ProtectedAction>
               )}
 
               {(user.role === 'admin' || (user.role === 'staff' && user.permissions?.canViewBookings)) && (
-                <MobileLink href="/admin/dashboard" icon={<BookCopy />}>{t('bookings')}</MobileLink>
+                <ProtectedAction featureId="bookings" href="/admin/dashboard">
+                  <MobileLink href="/admin/dashboard" icon={<BookCopy />}>{t('bookings')}</MobileLink>
+                </ProtectedAction>
               )}
 
               {user.role === 'admin' && (
                 <>
                   <div className="my-2 border-t -mx-4"></div>
                   <p className="px-4 text-sm font-semibold text-muted-foreground">Admin</p>
-                  <ProtectedAction featureId="manage_users">
+                  <ProtectedAction featureId="manage_users" href="/admin/users">
                     <MobileLink href="/admin/users" icon={<Users />}>{t('manage_users')}</MobileLink>
                   </ProtectedAction>
-                  <ProtectedAction featureId="manage_barbers">
+                  <ProtectedAction featureId="manage_barbers" href="/admin/barbers">
                     <MobileLink href="/admin/barbers" icon={<Users />}>{t('manage_barbers')}</MobileLink>
                   </ProtectedAction>
-                  <ProtectedAction featureId="manage_services">
+                  <ProtectedAction featureId="manage_services" href="/admin/services">
                     <MobileLink href="/admin/services" icon={<Sparkles />}>{t('manage_services')}</MobileLink>
                   </ProtectedAction>
-                  <ProtectedAction featureId="manage_expenses">
+                  <ProtectedAction featureId="manage_expenses" href="/admin/expenses">
                     <MobileLink href="/admin/expenses" icon={<Receipt />}>{t('manage_expenses')}</MobileLink>
                   </ProtectedAction>
-                  <ProtectedAction featureId="opening_hours">
+                  <ProtectedAction featureId="opening_hours" href="/admin/settings">
                     <MobileLink href="/admin/settings" icon={<Settings />}>{t('opening_hours')}</MobileLink>
                   </ProtectedAction>
-                  <ProtectedAction featureId="payment_settings">
+                  <ProtectedAction featureId="payment_settings" href="/admin/payment-settings">
                     <MobileLink href="/admin/payment-settings" icon={<CreditCard />}>{t('link_account')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction href="/admin/security">
+                    <MobileLink href="/admin/security" icon={<Lock />}>Security</MobileLink>
                   </ProtectedAction>
                 </>
               )}
@@ -286,22 +299,34 @@ export default function Header() {
                                 <span>{t('history_title')}</span>
                               </Link>
                             </DropdownMenuItem>
+                            {(user.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewOverview)) && (
+                              <ProtectedAction featureId="overview" href="/overview">
+                                <DropdownMenuItem asChild>
+                                  <Link href="/overview">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>{t('overview')}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              </ProtectedAction>
+                            )}
                             {(user.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewBookings)) && (
-                              <DropdownMenuItem asChild>
-                                <Link href="/admin/dashboard" className="relative">
-                                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                                  <span>{t('bookings')}</span>
-                                  {pendingCount > 0 && (
-                                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
-                                      {pendingCount}
-                                    </span>
-                                  )}
-                                </Link>
-                              </DropdownMenuItem>
+                              <ProtectedAction featureId="bookings" href="/admin/dashboard">
+                                <DropdownMenuItem asChild>
+                                  <Link href="/admin/dashboard" className="relative">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>{t('bookings')}</span>
+                                    {pendingCount > 0 && (
+                                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
+                                        {pendingCount}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </DropdownMenuItem>
+                              </ProtectedAction>
                             )}
                             {user.role === 'admin' && (
                               <>
-                                <ProtectedAction featureId="manage_users">
+                                <ProtectedAction featureId="manage_users" href="/admin/users">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/users">
                                       <Users className="mr-2 h-4 w-4" />
@@ -309,7 +334,7 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <ProtectedAction featureId="manage_barbers">
+                                <ProtectedAction featureId="manage_barbers" href="/admin/barbers">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/barbers">
                                       <Users className="mr-2 h-4 w-4" />
@@ -317,7 +342,7 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <ProtectedAction featureId="manage_services">
+                                <ProtectedAction featureId="manage_services" href="/admin/services">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/services">
                                       <Sparkles className="mr-2 h-4 w-4" />
@@ -325,7 +350,7 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <ProtectedAction featureId="manage_expenses">
+                                <ProtectedAction featureId="manage_expenses" href="/admin/expenses">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/expenses">
                                       <Receipt className="mr-2 h-4 w-4" />
@@ -333,7 +358,7 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <ProtectedAction featureId="opening_hours">
+                                <ProtectedAction featureId="opening_hours" href="/admin/settings">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/settings">
                                       <Settings className="mr-2 h-4 w-4" />
@@ -341,7 +366,7 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <ProtectedAction featureId="payment_settings">
+                                <ProtectedAction featureId="payment_settings" href="/admin/payment-settings">
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/payment-settings">
                                       <CreditCard className="mr-2 h-4 w-4" />
@@ -349,12 +374,14 @@ export default function Header() {
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>
-                                <DropdownMenuItem asChild>
-                                  <Link href="/admin/security">
-                                    <Lock className="mr-2 h-4 w-4" />
-                                    <span>Security</span>
-                                  </Link>
-                                </DropdownMenuItem>
+                                <ProtectedAction href="/admin/security">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/security">
+                                      <Lock className="mr-2 h-4 w-4" />
+                                      <span>Security</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
                                 <DropdownMenuItem asChild>
                                   <Link href="/admin/upgrade" className="text-primary font-bold">
                                     <Sparkles className="mr-2 h-4 w-4" />

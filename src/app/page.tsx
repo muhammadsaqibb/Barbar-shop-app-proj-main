@@ -34,6 +34,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useSettings } from "@/context/settings-provider";
 
 const formatUserDisplayName = (name: string | null | undefined, email: string | null | undefined): string => {
   if (name) return name;
@@ -150,6 +151,7 @@ export default function Home() {
   const { t } = useTranslation();
   const { firestore } = useFirebase();
   const { toast } = useToast();
+  const { settings } = useSettings();
 
   const [cardLayout, setCardLayout] = useState<ActionCardData[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -244,7 +246,7 @@ export default function Home() {
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline uppercase">
-            {t('app_headline')}
+            {settings.appName}
           </h1>
           <p className="mt-4 text-lg leading-8 text-muted-foreground">
             {user ? t('welcome_back_user', { name: displayName }) : t('app_subheadline_logged_out')}{' '}

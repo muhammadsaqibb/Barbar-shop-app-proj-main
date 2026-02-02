@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/context/language-provider";
 import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import { ProtectedAction } from "@/components/admin/protected-action";
+import useSound from "@/hooks/use-sound";
 
 import { Switch } from "@/components/ui/switch";
 
@@ -18,6 +19,7 @@ export function AdminPinSettings() {
     const { firestore } = useFirebase();
     const { toast } = useToast();
     const { t } = useTranslation();
+    const playSound = useSound();
     const [pin, setPin] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [showPin, setShowPin] = useState(false);
@@ -94,6 +96,7 @@ export function AdminPinSettings() {
                 title: 'Success!',
                 description: 'Admin PIN has been saved successfully.',
             });
+            playSound('pin-success');
             setHasChanged(false);
         } catch (error: any) {
             console.error("Error updating PIN:", error);
@@ -141,6 +144,28 @@ export function AdminPinSettings() {
                     This PIN protects sensitive areas from unauthorized access.
                     Default PIN is not set. Please set a 4-digit numeric PIN.
                 </p>
+
+                <div className="flex items-center justify-between p-4 border rounded-xl bg-card shadow-sm max-w-sm">
+                    <div className="space-y-0.5">
+                        <span className="font-semibold">Sound Effects</span>
+                        <p className="text-[10px] text-muted-foreground">
+                            For bookings, notifications, reminders & PIN access
+                        </p>
+                    </div>
+                    <Switch
+                        checked={currentShop?.soundEnabled === true}
+                        onCheckedChange={async (checked) => {
+                            try {
+                                const shopRef = doc(firestore, 'shops', currentShop.id);
+                                await updateDoc(shopRef, { soundEnabled: checked });
+                                toast({ title: checked ? 'Sound Enabled' : 'Sound Disabled' });
+                            } catch (e) {
+                                toast({ variant: 'destructive', title: 'Error', description: 'Failed to update sound setting' });
+                            }
+                        }}
+                        className="data-[state=checked]:bg-primary"
+                    />
+                </div>
 
                 <div className="flex items-end gap-3 max-w-sm">
                     <div className="flex-1 space-y-2">

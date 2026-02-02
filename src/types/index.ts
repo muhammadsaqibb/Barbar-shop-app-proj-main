@@ -34,6 +34,7 @@ export interface Shop {
   createdAt: any;
   adminPin?: string;
   featureLocks?: Record<string, boolean>;
+  soundEnabled?: boolean;
   settings?: {
     themeColor?: string;
     logoUrl?: string;

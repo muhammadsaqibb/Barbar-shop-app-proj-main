@@ -327,6 +327,7 @@ export default function BookingForm({ showPackagesOnly = false }: BookingFormPro
           title: toastTitle,
           description: toastDescription,
         });
+        playSound('booking-success');
         form.reset({
           services: {},
           date: new Date(),
@@ -730,11 +731,11 @@ function ServiceCard({ service, isSelected, onSelect, quantity, onQuantityChange
         </div>
         {isSelected && !showPackagesOnly && (
           <div className="flex items-center justify-center gap-2 mt-4">
-            <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => handleQuantityClick(e, quantity - 1)}>
+            <Button type="button" size="icon" variant="outline" className="h-6 w-6" onClick={(e) => handleQuantityClick(e, quantity - 1)}>
               <Minus className="h-4 w-4" />
             </Button>
             <span className="text-sm font-bold w-4 text-center">{quantity}</span>
-            <Button size="icon" variant="outline" className="h-6 w-6" onClick={(e) => handleQuantityClick(e, quantity + 1)}>
+            <Button type="button" size="icon" variant="outline" className="h-6 w-6" onClick={(e) => handleQuantityClick(e, quantity + 1)}>
               <Plus className="h-4 w-4" />
             </Button>
           </div>
