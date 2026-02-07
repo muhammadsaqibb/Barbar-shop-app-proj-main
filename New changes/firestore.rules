@@ -1,0 +1,97 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function getRequestingUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function isRequestingUserEnabled() {
+      let userDoc = getRequestingUserData();
+      return userDoc.exists && userDoc.data.enabled != false;
+    }
+
+    function isRequestingUserAdmin() {
+      // Use the 'let' keyword to cache the result of the get call within the function scope.
+      let userDoc = getRequestingUserData();
+      return isSignedIn() && userDoc.exists && userDoc.data.enabled != false && userDoc.data.role == 'admin';
+    }
+    
+    function isRequestingUserStaff() {
+      let userDoc = getRequestingUserData();
+      return isSignedIn() && userDoc.exists && userDoc.data.enabled != false && userDoc.data.role == 'staff';
+    }
+
+    function isRequestingUserStaffOrAdmin() {
+      let userDoc = getRequestingUserData();
+      return isSignedIn() && userDoc.exists && userDoc.data.enabled != false && (userDoc.data.role == 'admin' || userDoc.data.role == 'staff');
+    }
+
+    function isRequestingUserClient() {
+      let userDoc = getRequestingUserData();
+      return isSignedIn() && userDoc.exists && userDoc.data.enabled != false && userDoc.data.role == 'client';
+    }
+
+    function isEnabled(userId) {
+        return exists(/databases/$(database)/documents/users/$(userId)) &&
+               get(/databases/$(database)/documents/users/$(userId)).data.enabled != false;
+    }
+
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    match /users/{userId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /services/{serviceId} {
+      allow get, list: if true;
+      allow create, update, delete: if isRequestingUserAdmin();
+    }
+
+    match /barbers/{barberId} {
+      allow get, list: if true;
+      allow create, update, delete: if isRequestingUserAdmin();
+    }
+    
+    match /appointments/{appointmentId} {
+        allow read, write: if isSignedIn();
+    }
+
+    match /expenses/{expenseId} {
+      allow read, list, create, update, delete: if isRequestingUserAdmin();
+    }
+
+    match /shops/{shopId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isRequestingUserAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
+      allow delete: if isRequestingUserAdmin();
+    }
+
+    match /shopSettings/{settingsId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /reviews/{reviewId} {
+      allow list, get: if isSignedIn();
+      allow create: if isRequestingUserClient() && request.resource.data.userId == request.auth.uid;
+      allow update: if isRequestingUserAdmin() || (isRequestingUserClient() && resource.data.userId == request.auth.uid);
+      allow delete: if isRequestingUserAdmin() || (isRequestingUserClient() && resource.data.userId == request.auth.uid);
+    }
+  }
+}

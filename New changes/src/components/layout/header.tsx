@@ -1,0 +1,477 @@
+
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/components/auth-provider';
+import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, Settings, User as UserIcon, LayoutDashboard, Users, Sparkles, Receipt, Menu, BookCopy, Package, Scissors, CreditCard, Lock, Gift } from 'lucide-react';
+import type { ShopSettings } from '@/types';
+import LogoWithUpload from '../logo-with-upload';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle, SheetDescription } from '../ui/sheet';
+import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { useEffect, useRef, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import useSound from '@/hooks/use-sound';
+import { ModeToggle } from '../mode-toggle';
+import { useTranslation } from '@/context/language-provider';
+import { LanguageSwitcher } from '../language-switcher';
+import { CurrencySwitcher } from '../currency-switcher';
+import { Skeleton } from '../ui/skeleton';
+import { cn } from '@/lib/utils';
+import { useSettings } from '@/context/settings-provider';
+import { RenameShopDialog } from '../rename-shop-dialog';
+import { useSaaS } from '@/context/saas-provider';
+import { ProtectedAction } from '../admin/protected-action';
+
+export default function Header() {
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+  const playSound = useSound();
+  const { t } = useTranslation();
+  const { settings } = useSettings();
+  const { currentShop } = useSaaS();
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+
+  const pendingQuery = useMemoFirebase(() => {
+    if (!firestore || (user?.role !== 'admin' && user?.role !== 'staff')) return null;
+    return query(collection(firestore, 'appointments'), where('status', '==', 'pending'));
+  }, [firestore, user]);
+
+  const { data: pendingAppointments } = useCollection(pendingQuery);
+  const pendingCount = pendingAppointments?.length ?? 0;
+  const prevPendingCount = useRef(pendingCount);
+  const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      prevPendingCount.current = pendingCount;
+      return;
+    }
+
+    if (pendingCount > prevPendingCount.current) {
+      toast({
+        title: t('new_booking_request'),
+        description: t('new_booking_description'),
+      });
+      playSound('reminder');
+    }
+
+    prevPendingCount.current = pendingCount;
+  }, [pendingCount, toast, playSound, t]);
+
+  const shopSettingsRef = useMemoFirebase(() => firestore ? doc(firestore, 'shopSettings', 'config') : null, [firestore]);
+  const { data: shopSettings } = useDoc<ShopSettings>(shopSettingsRef);
+  const isReferralEnabled = shopSettings?.referralSettings?.enabled ?? false;
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  const NavLinks = () => (
+    <>
+      {(user?.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewOverview)) && (
+        <ProtectedAction featureId="overview" href="/overview">
+          <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
+            <Link href="/overview">{t('overview')}</Link>
+          </Button>
+        </ProtectedAction>
+      )}
+      {(user?.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewBookings)) && (
+        <ProtectedAction featureId="bookings" href="/admin/dashboard">
+          <Button variant="ghost" asChild className={cn("text-white hover:text-white hover:bg-white/20", pendingCount > 0 && "animate-vibrate-reminder")}>
+            <Link href="/admin/dashboard" className="relative">
+              {t('bookings')}
+              {pendingCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
+          </Button>
+        </ProtectedAction>
+      )}
+      {user?.role === 'admin' && (
+        <ProtectedAction featureId="manage_users" href="/admin/users">
+          <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
+            <Link href="/admin/users">{t('manage_users')}</Link>
+          </Button>
+        </ProtectedAction>
+      )}
+    </>
+  );
+
+  const AuthLinks = () => (
+    <div className="flex items-center gap-2">
+      <Button variant="ghost" asChild className="text-white hover:text-white hover:bg-white/20">
+        <Link href="/login">{t('login')}</Link>
+      </Button>
+      <Button asChild variant="secondary" className="font-bold text-primary">
+        <Link href="/register">{t('register')}</Link>
+      </Button>
+    </div>
+  );
+
+  const MobileLink = ({ href, children, icon }: { href: string, children: React.ReactNode, icon: React.ReactNode }) => (
+    <SheetClose asChild>
+      <Link href={href} className="flex items-center gap-4 rounded-md p-3 text-base font-medium hover:bg-accent text-foreground">
+        {icon}
+        <span>{children}</span>
+      </Link>
+    </SheetClose>
+  );
+
+  const mobileMenuContent = (
+    <SheetContent className="w-[300px]" side="right">
+      <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+      <SheetDescription className="sr-only">A list of navigation links and user actions.</SheetDescription>
+      <div className="flex flex-col h-full">
+        {user ? (
+          <>
+            <div className="p-4 border-b">
+              <p className="font-semibold">{user.name}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+            <div className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
+              {user.role === 'client' && (
+                <>
+                  <MobileLink href="/book" icon={<Scissors />}>{t('book_cut_title')}</MobileLink>
+                  <MobileLink href="/packages" icon={<Package />}>{t('packages_title')}</MobileLink>
+                  <MobileLink href="/my-appointments" icon={<BookCopy />}>{t('history_title')}</MobileLink>
+                  {isReferralEnabled && (
+                    <MobileLink href="/referrals" icon={<Gift />}>{t('refer_and_earn')}</MobileLink>
+                  )}
+                </>
+              )}
+
+              {(user.role === 'admin' || (user.role === 'staff' && user.permissions?.canViewOverview)) && (
+                <ProtectedAction featureId="overview" href="/overview">
+                  <MobileLink href="/overview" icon={<LayoutDashboard />}>{t('overview')}</MobileLink>
+                </ProtectedAction>
+              )}
+
+              {(user.role === 'admin' || (user.role === 'staff' && user.permissions?.canViewBookings)) && (
+                <ProtectedAction featureId="bookings" href="/admin/dashboard">
+                  <MobileLink href="/admin/dashboard" icon={<BookCopy />}>{t('bookings')}</MobileLink>
+                </ProtectedAction>
+              )}
+
+              {user.role === 'admin' && (
+                <>
+                  <div className="my-2 border-t -mx-4"></div>
+                  <p className="px-4 text-sm font-semibold text-muted-foreground">Admin</p>
+                  <ProtectedAction featureId="manage_users" href="/admin/users">
+                    <MobileLink href="/admin/users" icon={<Users />}>{t('manage_users')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction featureId="manage_barbers" href="/admin/barbers">
+                    <MobileLink href="/admin/barbers" icon={<Users />}>{t('manage_barbers')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction featureId="manage_services" href="/admin/services">
+                    <MobileLink href="/admin/services" icon={<Sparkles />}>{t('manage_services')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction featureId="manage_expenses" href="/admin/expenses">
+                    <MobileLink href="/admin/expenses" icon={<Receipt />}>{t('manage_expenses')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction featureId="opening_hours" href="/admin/settings">
+                    <MobileLink href="/admin/settings" icon={<Settings />}>{t('shop_settings') || 'Shop Settings'}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction featureId="payment_settings" href="/admin/payment-settings">
+                    <MobileLink href="/admin/payment-settings" icon={<CreditCard />}>{t('link_account')}</MobileLink>
+                  </ProtectedAction>
+                  <ProtectedAction href="/admin/security">
+                    <MobileLink href="/admin/security" icon={<Lock />}>Security</MobileLink>
+                  </ProtectedAction>
+                </>
+              )}
+            </div>
+            <div className="p-4 border-t space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Language</span>
+                <LanguageSwitcher />
+              </div>
+              <Button variant="outline" className="w-full" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>{t('logout')}</span>
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="p-4 flex flex-col items-center gap-4 mt-8">
+            <SheetClose asChild>
+              <Button asChild className="w-full">
+                <Link href="/login">{t('login')}</Link>
+              </Button>
+            </SheetClose>
+            <SheetClose asChild>
+              <Button variant="outline" asChild className="w-full">
+                <Link href="/register">{t('register')}</Link>
+              </Button>
+            </SheetClose>
+          </div>
+        )}
+      </div>
+    </SheetContent>
+  );
+
+
+  const isBookingLimitReached = currentShop?.plan === 'free' && (currentShop?.bookingCount || 0) >= 100;
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-[#9575CD] backdrop-blur-sm text-white">
+      {user?.role === 'admin' && isBookingLimitReached && (
+        <div className="bg-amber-500 text-white text-center py-2 px-4 text-sm font-bold animate-in slide-in-from-top duration-500">
+          ⚠️ You have reached your 100 booking limit. Please <Link href="/admin/upgrade" className="underline hover:text-amber-100 transition-colors">Upgrade Plan</Link> for unlimited usage.
+        </div>
+      )}
+      <div className="container flex h-16 items-center">
+        <div className="mr-2 flex items-center space-x-2 lg:mr-6">
+          <LogoWithUpload src={currentShop?.logo} shopId={currentShop?.id} />
+          <Link href="/">
+            <div className="grid font-bold font-headline uppercase leading-tight text-xs text-center">
+              <span>{settings.appName}</span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="hidden lg:flex items-center space-x-2 text-sm font-medium">
+          {user && <NavLinks />}
+        </div>
+
+        <div className="flex-1 flex items-center justify-end space-x-2">
+          <nav className="flex items-center gap-1 sm:gap-2">
+            {user && (user?.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewBookings)) && (
+              <Button asChild className={cn("lg:hidden relative text-white hover:text-white hover:bg-white/20", pendingCount > 0 && "animate-vibrate-reminder")} variant="ghost" size="sm">
+                <Link href="/admin/dashboard">
+                  {t('bookings')}
+                  {pendingCount > 0 && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+            )}
+            {user && user.role === 'client' && (
+              <Button asChild variant="secondary" size="sm" className="lg:hidden text-primary font-bold">
+                <Link href="/book">Book Now</Link>
+              </Button>
+            )}
+            {user && user.role === 'admin' && currentShop?.plan === 'free' && (
+              <Button asChild size="sm" className="hidden sm:flex bg-amber-500 hover:bg-amber-600 text-white font-bold animate-pulse gap-1">
+                <Link href="/admin/upgrade">
+                  <Sparkles className="h-4 w-4" />
+                  Upgrade
+                </Link>
+              </Button>
+            )}
+            <CurrencySwitcher />
+            <ModeToggle />
+            {loading ? (
+              <Skeleton className="h-8 w-8 rounded-full" />
+            ) : (
+              <>
+                {/* Desktop: Auth links or User Dropdown */}
+                <div className="flex items-center gap-2">
+                  {user ? (
+                    <>
+                      {/* Desktop User Menu */}
+                      <div className="hidden lg:flex items-center gap-3 pl-3 border-l border-white/20 ml-2">
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-bold leading-none">{user.name}</span>
+                          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">
+                            {currentShop?.plan || 'Free'} Plan
+                          </span>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-white/20 hover:border-white transition-colors">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={user.email ? undefined : ''} alt={user.name || 'User'} />
+                                <AvatarFallback className="bg-primary-foreground text-primary font-bold">
+                                  {user.name?.charAt(0).toUpperCase() || <UserIcon className="h-5 w-5" />}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56" align="end" forceMount>
+                            {/* ... Dropdown Content kept largely same, but verify duplicate blocks ... */}
+                            <DropdownMenuLabel className="font-normal">
+                              <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{user.name}</p>
+                                <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                              </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {user.role === 'client' && (
+                              <>
+                                <DropdownMenuItem asChild>
+                                  <Link href="/my-appointments">
+                                    <BookCopy className="mr-2 h-4 w-4" />
+                                    <span>{t('history_title')}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {isReferralEnabled && (user.role === 'client' || user.role === 'admin' || user.role === 'staff') && (
+                              <DropdownMenuItem asChild>
+                                <Link href="/referrals">
+                                  <Gift className="mr-2 h-4 w-4" />
+                                  <span>{t('refer_and_earn')}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            {(user.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewOverview)) && (
+                              <ProtectedAction featureId="overview" href="/overview">
+                                <DropdownMenuItem asChild>
+                                  <Link href="/overview">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>{t('overview')}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              </ProtectedAction>
+                            )}
+                            {(user.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewBookings)) && (
+                              <ProtectedAction featureId="bookings" href="/admin/dashboard">
+                                <DropdownMenuItem asChild>
+                                  <Link href="/admin/dashboard" className="relative">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    <span>{t('bookings')}</span>
+                                    {pendingCount > 0 && (
+                                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground">
+                                        {pendingCount}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </DropdownMenuItem>
+                              </ProtectedAction>
+                            )}
+                            {user.role === 'admin' && (
+                              <>
+                                <ProtectedAction featureId="manage_users" href="/admin/users">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/users">
+                                      <Users className="mr-2 h-4 w-4" />
+                                      <span>{t('manage_users')}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction featureId="manage_barbers" href="/admin/barbers">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/barbers">
+                                      <Users className="mr-2 h-4 w-4" />
+                                      <span>{t('manage_barbers')}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction featureId="manage_services" href="/admin/services">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/services">
+                                      <Sparkles className="mr-2 h-4 w-4" />
+                                      <span>{t('manage_services')}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction featureId="manage_expenses" href="/admin/expenses">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/expenses">
+                                      <Receipt className="mr-2 h-4 w-4" />
+                                      <span>{t('manage_expenses')}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction featureId="opening_hours" href="/admin/settings">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/settings">
+                                      <Settings className="mr-2 h-4 w-4" />
+                                      <span>{t('shop_settings') || 'Shop Settings'}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction featureId="payment_settings" href="/admin/payment-settings">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/payment-settings">
+                                      <CreditCard className="mr-2 h-4 w-4" />
+                                      <span>{t('link_account')}</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <ProtectedAction href="/admin/security">
+                                  <DropdownMenuItem asChild>
+                                    <Link href="/admin/security">
+                                      <Lock className="mr-2 h-4 w-4" />
+                                      <span>Security</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                </ProtectedAction>
+                                <DropdownMenuItem asChild>
+                                  <Link href="/admin/upgrade" className="text-primary font-bold">
+                                    <Sparkles className="mr-2 h-4 w-4" />
+                                    <span>Upgrade Plan</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
+                                  <Settings className="mr-2 h-4 w-4" />
+                                  <span>Rename Shop</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 focus:bg-transparent">
+                              <div className="flex w-full items-center justify-between px-2 py-1.5">
+                                <span className="text-sm text-muted-foreground">Language</span>
+                                <LanguageSwitcher />
+                              </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleSignOut}>
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>{t('logout')}</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      {/* Mobile: Menu Trigger / Avatar */}
+                      <div className="lg:hidden ml-2">
+                        <Sheet>
+                          <SheetTrigger asChild>
+                            <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-white/20 p-0 hover:bg-white/10">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={user.email ? undefined : ''} alt={user.name || 'User'} />
+                                <AvatarFallback className="bg-primary-foreground text-primary font-bold">
+                                  {user.name?.charAt(0).toUpperCase() || <UserIcon className="h-5 w-5" />}
+                                </AvatarFallback>
+                              </Avatar>
+                            </Button>
+                          </SheetTrigger>
+                          {mobileMenuContent}
+                        </Sheet>
+                      </div>
+                    </>
+                  ) : (
+                    <AuthLinks />
+                  )}
+                </div>
+              </>
+            )}
+          </nav>
+        </div>
+      </div>
+      <RenameShopDialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen} />
+    </header>
+  );
+}

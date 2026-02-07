@@ -1,0 +1,255 @@
+
+[
+    {
+      "id": "classic-haircut",
+      "name": "Classic Haircut",
+      "isPackage": false,
+      "price": 2500,
+      "duration": 30,
+      "description": "A timeless haircut tailored to your preference.",
+      "enabled": true
+    },
+    {
+      "id": "skin-fade",
+      "name": "Skin Fade",
+      "isPackage": false,
+      "price": 3000,
+      "duration": 45,
+      "description": "A sharp fade down to the skin for a clean look.",
+      "enabled": true
+    },
+    {
+      "id": "beard-trim",
+      "name": "Beard Trim",
+      "isPackage": false,
+      "price": 1500,
+      "duration": 20,
+      "description": "Keep your beard neat and tidy.",
+      "enabled": true
+    },
+    {
+      "id": "beard-trim-shape",
+      "name": "Beard Trim & Shape",
+      "isPackage": false,
+      "price": 2000,
+      "duration": 30,
+      "description": "Precision trimming and shaping for a sharp beard.",
+      "enabled": true
+    },
+    {
+      "id": "razor-beard-shave",
+      "name": "Razor Beard Shave",
+      "isPackage": false,
+      "price": 1800,
+      "duration": 25,
+      "description": "A close and smooth shave with a straight razor.",
+      "enabled": true
+    },
+    {
+      "id": "head-shave",
+      "name": "Head Shave",
+      "isPackage": false,
+      "price": 2200,
+      "duration": 30,
+      "description": "A clean and smooth head shave.",
+      "enabled": true
+    },
+    {
+      "id": "buzz-cut",
+      "name": "Buzz Cut",
+      "isPackage": false,
+      "price": 1800,
+      "duration": 20,
+      "description": "A simple and stylish buzz cut.",
+      "enabled": true
+    },
+    {
+      "id": "kids-haircut",
+      "name": "Kids Haircut",
+      "isPackage": false,
+      "price": 1500,
+      "duration": 25,
+      "description": "A patient and fun haircut experience for kids.",
+      "enabled": true
+    },
+    {
+      "id": "senior-citizen-cut",
+      "name": "Senior Citizen Cut",
+      "isPackage": false,
+      "price": 1200,
+      "duration": 30,
+      "description": "A classic cut for our respected seniors.",
+      "enabled": true
+    },
+    {
+      "id": "steam-facial",
+      "name": "Steam Facial",
+      "isPackage": false,
+      "price": 2500,
+      "duration": 30,
+      "description": "A relaxing facial to cleanse and rejuvenate your skin.",
+      "enabled": true
+    },
+    {
+      "id": "black-mask-facial",
+      "name": "Black Mask Facial",
+      "isPackage": false,
+      "price": 2800,
+      "duration": 35,
+      "description": "A deep-cleansing facial to remove impurities.",
+      "enabled": true
+    },
+    {
+      "id": "hair-wash-blow-dry",
+      "name": "Hair Wash & Blow Dry",
+      "isPackage": false,
+      "price": 1000,
+      "duration": 20,
+      "description": "A refreshing wash and professional blow dry.",
+      "enabled": true
+    },
+    {
+      "id": "scalp-massage",
+      "name": "Scalp Massage",
+      "isPackage": false,
+      "price": 1200,
+      "duration": 15,
+      "description": "A relaxing massage to stimulate your scalp.",
+      "enabled": true
+    },
+    {
+      "id": "anti-dandruff-treatment",
+      "name": "Anti-Dandruff Treatment",
+      "isPackage": false,
+      "price": 1800,
+      "duration": 25,
+      "description": "An effective treatment to combat dandruff.",
+      "enabled": true
+    },
+    {
+      "id": "hair-spa-treatment",
+      "name": "Hair Spa Treatment",
+      "isPackage": false,
+      "price": 3500,
+      "duration": 50,
+      "description": "A nourishing treatment for healthy, shiny hair.",
+      "enabled": true
+    },
+    {
+      "id": "hair-wash",
+      "name": "Hair Wash",
+      "isPackage": false,
+      "price": 500,
+      "duration": 10,
+      "description": "A quick and refreshing hair wash.",
+      "enabled": true
+    },
+    {
+      "id": "beard-oil-application",
+      "name": "Beard Oil Application",
+      "isPackage": false,
+      "price": 400,
+      "duration": 5,
+      "description": "Nourish your beard with our premium oils.",
+      "enabled": true
+    },
+    {
+      "id": "face-massage",
+      "name": "Face Massage",
+      "isPackage": false,
+      "price": 1500,
+      "duration": 20,
+      "description": "A relaxing massage to rejuvenate your facial muscles.",
+      "enabled": true
+    },
+    {
+      "id": "neck-shoulder-massage",
+      "name": "Neck & Shoulder Massage",
+      "isPackage": false,
+      "price": 1800,
+      "duration": 20,
+      "description": "Relieve tension with a focused massage.",
+      "enabled": true
+    },
+    {
+      "id": "styling-gel-wax",
+      "name": "Styling Gel / Wax",
+      "isPackage": false,
+      "price": 300,
+      "duration": 5,
+      "description": "Get the perfect hold with our styling products.",
+      "enabled": true
+    },
+    {
+      "id": "hair-color-touch-up",
+      "name": "Hair Color Touch-Up",
+      "isPackage": false,
+      "price": 4000,
+      "duration": 60,
+      "description": "Refresh your hair color with a professional touch-up.",
+      "enabled": true
+    },
+    {
+      "id": "eyebrow-trimming",
+      "name": "Eyebrow Trimming",
+      "isPackage": false,
+      "price": 500,
+      "duration": 10,
+      "description": "Shape and define your eyebrows.",
+      "enabled": true
+    },
+    {
+      "id": "haircut-beard-trim",
+      "name": "Haircut + Beard Trim",
+      "isPackage": true,
+      "price": 3800,
+      "duration": 50,
+      "description": "The essential combo for a sharp look.",
+      "enabled": true
+    },
+    {
+      "id": "haircut-hot-towel-shave",
+      "name": "Haircut + Hot Towel Shave",
+      "isPackage": true,
+      "price": 4500,
+      "duration": 60,
+      "description": "A classic haircut followed by a luxurious shave.",
+      "enabled": true
+    },
+    {
+      "id": "hot-towel-beard-shave",
+      "name": "Hot Towel Beard Shave",
+      "isPackage": true,
+      "price": 2200,
+      "duration": 30,
+      "description": "A traditional hot towel shave for the perfect finish.",
+      "enabled": true
+    },
+    {
+      "id": "royal-grooming-package",
+      "name": "Royal Grooming Package",
+      "isPackage": true,
+      "price": 7500,
+      "duration": 90,
+      "description": "Haircut, shave, facial, and massage for the ultimate experience.",
+      "enabled": true
+    },
+    {
+      "id": "luxury-haircut-experience",
+      "name": "Luxury Haircut Experience",
+      "isPackage": true,
+      "price": 5500,
+      "duration": 75,
+      "description": "Haircut, wash, scalp massage, and styling.",
+      "enabled": true
+    },
+    {
+      "id": "beard-styling-with-products",
+      "name": "Beard Styling with Products",
+      "isPackage": true,
+      "price": 2500,
+      "duration": 30,
+      "description": "Expert shaping and styling for a picture-perfect beard.",
+      "enabled": true
+    }
+]

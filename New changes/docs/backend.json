@@ -1,0 +1,491 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the BookItEasy application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role within the application (e.g., 'client', 'admin', 'staff').",
+          "enum": ["client", "admin", "staff"]
+        },
+        "permissions": {
+          "type": "object",
+          "description": "Granular permissions for staff members.",
+          "properties": {
+            "canViewBookings": {
+              "type": "boolean"
+            },
+            "canAddWalkInBookings": {
+              "type": "boolean"
+            },
+            "canEditBookingStatus": {
+              "type": "boolean"
+            },
+            "canManageCustomers": {
+              "type": "boolean"
+            },
+            "canViewOverview": {
+              "type": "boolean"
+            }
+          }
+        },
+        "homepageLayout": {
+            "type": "array",
+            "description": "The user's custom order of homepage action cards.",
+            "items": {
+                "type": "string"
+            }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "role"
+      ]
+    },
+    "Appointment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Appointment",
+      "type": "object",
+      "description": "Represents an appointment booked by a client.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the appointment entity."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "The ID of the client who booked the appointment."
+        },
+        "clientName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The name of the client."
+        },
+        "services": {
+          "type": "array",
+          "description": "An array of services booked for the appointment.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "quantity": {
+                "type": "number",
+                "description": "Number of times the service is booked."
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "price",
+              "duration"
+            ]
+          }
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "The total price of all services in the appointment."
+        },
+        "totalDuration": {
+          "type": "number",
+          "description": "The total duration of all services in the appointment in minutes."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date of the appointment in 'MMM d, yyyy' format."
+        },
+        "time": {
+          "type": "string",
+          "description": "The time of the appointment."
+        },
+        "barberId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The ID of the requested barber."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional notes from the client for the barber."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the appointment.",
+          "enum": [
+            "pending",
+            "confirmed",
+            "completed",
+            "cancelled",
+            "no-show"
+          ]
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "The selected payment method for the appointment.",
+          "enum": [
+            "cash",
+            "online"
+          ]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "The payment status of the appointment.",
+          "enum": [
+            "paid",
+            "unpaid"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time when the appointment was created.",
+          "format": "date-time"
+        },
+        "bookedBy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The name of the admin or staff member who manually created the booking."
+        }
+      },
+      "required": [
+        "id",
+        "clientId",
+        "clientName",
+        "services",
+        "totalPrice",
+        "totalDuration",
+        "date",
+        "time",
+        "status",
+        "paymentMethod",
+        "paymentStatus",
+        "createdAt"
+      ]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a service or package offered by the barber shop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the service."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "isPackage": {
+          "type": "boolean",
+          "description": "True if this is a package deal."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the service."
+        },
+        "discountedPrice": {
+            "type": "number",
+            "description": "The discounted price of the service, if applicable."
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the service in minutes."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the service."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the service is available for booking."
+        },
+        "maxQuantity": {
+          "type": "number",
+          "description": "Maximum quantity that can be booked for this service."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "isPackage",
+        "price",
+        "duration",
+        "enabled"
+      ]
+    },
+    "Barber": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Barber",
+      "type": "object",
+      "description": "Represents a barber available for appointments.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the barber."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the barber."
+        },
+        "phone": {
+            "type": "string",
+            "description": "The barber's phone number."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Expense": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents a single business expense.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the expense."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or description of the expense (e.g., 'Shop Rent', 'Staff Lunch')."
+        },
+        "amount": {
+          "type": "number",
+          "description": "The cost of the expense."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date the expense was incurred.",
+          "format": "date-time"
+        },
+        "notes": {
+            "type": "string",
+            "description": "Optional notes about the expense."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "amount",
+        "createdAt"
+      ]
+    },
+    "ShopSettings": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ShopSettings",
+      "type": "object",
+      "description": "Represents the shop's operational settings.",
+      "properties": {
+        "openingTime": {
+          "type": "string",
+          "description": "Shop opening time in HH:mm format (e.g., '09:00')."
+        },
+        "closingTime": {
+          "type": "string",
+          "description": "Shop closing time in HH:mm format (e.g., '18:00')."
+        }
+      },
+      "required": [
+        "openingTime",
+        "closingTime"
+      ]
+    },
+    "PaymentMethod": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentMethod",
+      "type": "object",
+      "description": "Represents a single payment method for the shop.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the payment method."
+        },
+        "methodName": {
+          "type": "string",
+          "description": "The name of the payment method (e.g., 'Easypaisa', 'HBL')."
+        },
+        "accountHolderName": {
+          "type": "string",
+          "description": "The name of the account holder."
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "The account number or identifier."
+        }
+      },
+      "required": [
+        "id",
+        "methodName",
+        "accountHolderName",
+        "accountNumber"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles.  The `userId` is the Firebase Auth UID. This collection stores basic user information like name, email, and role.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/appointments/{appointmentId}",
+        "definition": {
+          "entityName": "Appointment",
+          "schema": {
+            "$ref": "#/backend/entities/Appointment"
+          },
+          "description": "Stores appointments booked by each user. `clientId` in each appointment is equivalent to the `userId` in the path to maintain data integrity and simplify querying. Includes `clientId` for query purposes, though it mirrors the path-based ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Auth UID of the user who booked the appointment (the client)."
+            },
+            {
+              "name": "appointmentId",
+              "description": "The unique ID of the appointment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/backend/entities/Service"
+          },
+          "description": "Stores all services and packages offered by the shop.",
+          "params": [
+            {
+              "name": "serviceId",
+              "description": "The unique ID of the service."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/barbers/{barberId}",
+        "definition": {
+          "entityName": "Barber",
+          "schema": {
+            "$ref": "#/backend/entities/Barber"
+          },
+          "description": "Stores information about available barbers.",
+          "params": [
+            {
+              "name": "barberId",
+              "description": "The unique ID of the barber."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/expenses/{expenseId}",
+        "definition": {
+          "entityName": "Expense",
+          "schema": {
+            "$ref": "#/backend/entities/Expense"
+          },
+          "description": "Stores all business expenses. Only accessible by admins.",
+          "params": [
+            {
+              "name": "expenseId",
+              "description": "The unique ID of the expense."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/shopSettings/{settingsId}",
+        "definition": {
+          "entityName": "ShopSettings",
+          "schema": {
+            "$ref": "#/backend/entities/ShopSettings"
+          },
+          "description": "Stores global shop settings. Should contain a single document for configuration (e.g., 'config').",
+          "params": [
+            {
+              "name": "settingsId",
+              "description": "The unique ID for the settings document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/shopSettings/{settingsId}/paymentMethods/{paymentMethodId}",
+        "definition": {
+          "entityName": "PaymentMethod",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentMethod"
+          },
+          "description": "Stores the shop's various payment methods for online transfers.",
+          "params": [
+            {
+              "name": "settingsId",
+              "description": "The unique ID for the settings document (e.g., 'config')."
+            },
+            {
+              "name": "paymentMethodId",
+              "description": "The unique ID of the payment method."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support a simple appointment booking system with user authentication and role management. It prioritizes security and scalability by adhering to the principles of Authorization Independence and Structural Segregation. The structure uses path-based ownership for user-specific data (appointments) and separates user profiles from appointment data to ensure data integrity. This design avoids using `get()` calls in security rules, enabling atomic operations and easier debugging. The `services` and `barbers` collections are top-level collections for easy querying and management by admins. Payment methods are stored as a subcollection of `shopSettings` for scalability.\n\nAuthorization Independence:\nAppointments are stored under `/users/{userId}/appointments/{appointmentId}`, which allows direct ownership-based security rules without needing to fetch parent user data. The `clientId` field in the `Appointment` document is redundant but is kept to make querying for a specific client's appointments easier, if necessary, at the cost of data duplication.\n\nQAPs Support:\nThe structure supports QAPs (Rules are not Filters) effectively. List operations for appointments are scoped to the user's path (`/users/{userId}/appointments`), enabling secure listing of appointments associated with a specific user. The 'users' collection is segregated from the 'appointments' subcollection to ensure that listing users does not expose appointment data. Admins will require custom backend logic, the firestore structure is not aware of admin capabilities."
+  }
+}
