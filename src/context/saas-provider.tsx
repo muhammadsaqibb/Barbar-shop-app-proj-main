@@ -140,13 +140,14 @@ export const SaaSProvider = ({ children }: { children: ReactNode }) => {
         if (currentShop.plan === 'pro') return false;
 
         if (feature === 'customers') {
-            // Standard limit for Free plan is 100
-            return currentShop.plan === 'free' && currentShop.customerCount >= (currentShop.maxCustomers || 100);
+            // Standard limit for Free plan is 100 customers
+            return currentShop.plan === 'free' && (currentShop.customerCount || 0) >= (currentShop.maxCustomers || 100);
         }
 
         if (feature === 'bookings') {
-            // If customer limit reached, also block bookings
-            return currentShop.plan === 'free' && currentShop.customerCount >= (currentShop.maxCustomers || 100);
+            // Requirement: Allow booking but show warning. So we return false here to allow it.
+            // But we can check it for warning purposes.
+            return false;
         }
 
         return false;

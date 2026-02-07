@@ -12,15 +12,24 @@ export interface StaffPermissions {
 }
 
 export interface AppUser {
-  id?: string; // from firestore doc id
+  id?: string;
   uid: string;
   email: string | null;
   name: string | null;
   role: 'client' | 'admin' | 'staff';
-  shopId?: string; // Mandatory for admin/staff, optional for clients (or linked to shop they are booking with)
+  shopId?: string;
   permissions?: StaffPermissions;
   enabled?: boolean;
   homepageLayout?: string[];
+  referralCode?: string;
+  referredBy?: string | null;
+  rewardBalance?: number;
+  welcomeRewardUsed?: boolean;
+  referralStats?: {
+    totalReferrals: number;
+    successfulReferrals: number;
+    totalRewardsEarned: number;
+  };
 }
 
 export interface Shop {
@@ -29,6 +38,7 @@ export interface Shop {
   ownerId: string;
   plan: 'free' | 'basic' | 'pro';
   customerCount: number;
+  bookingCount?: number;
   maxCustomers: number;
   status: 'active' | 'suspended';
   createdAt: any;
@@ -37,8 +47,17 @@ export interface Shop {
   soundEnabled?: boolean;
   settings?: {
     themeColor?: string;
-    logoUrl?: string;
+    logoUrl?: string; // Legacy field, prioritize `logo` below
   };
+  // Location & Media
+  address?: string;
+  city?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  featuredImage?: string;
+  logo?: string;
 }
 
 export interface Service {
@@ -48,7 +67,7 @@ export interface Service {
   isPackage: boolean;
   price: number;
   discountedPrice?: number;
-  duration: number; // in minutes
+  duration: number;
   description?: string;
   enabled: boolean;
   maxQuantity?: number;
@@ -64,8 +83,9 @@ export interface Barber {
 export interface Appointment {
   id: string;
   shopId: string;
-  clientId: string;
+  clientId?: string | null;
   clientName: string | null;
+  clientPhone?: string | null;
   services: { id: string, name: string, price: number, duration: number, quantity: number }[];
   totalPrice: number;
   totalDuration: number;
@@ -74,10 +94,12 @@ export interface Appointment {
   barberId: string | null;
   notes: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
-  paymentMethod: 'cash' | 'online';
-  paymentStatus: 'paid' | 'unpaid';
+  paymentMethod: 'cash' | 'online' | 'pending';
+  paymentStatus: 'paid' | 'unpaid' | 'pending';
   createdAt: any;
   bookedBy?: string | null;
+  bookingType: 'online' | 'walk-in';
+  rewardApplied?: number;
 }
 
 export interface Expense {
@@ -89,11 +111,29 @@ export interface Expense {
   notes?: string;
 }
 
+export interface ReferralSettings {
+  enabled: boolean;
+  referrerRewardType: 'fixed' | 'percentage';
+  referrerRewardValue: number;
+  newClientRewardType: 'fixed' | 'percentage';
+  newClientRewardValue: number;
+  oneTimeOnly: boolean;
+  expiryDays?: number;
+}
+
+export interface CurrencySettings {
+  baseCurrency: string;
+  rates: Record<string, number>; // e.g., { USD: 280, EUR: 300 }
+  displayCurrencies: string[]; // List of enabled currencies for display
+}
+
 export interface ShopSettings {
   id?: string;
   shopId: string;
-  openingTime: string; // e.g. "09:00"
-  closingTime: string; // e.g. "18:00"
+  openingTime: string;
+  closingTime: string;
+  referralSettings?: ReferralSettings;
+  currencySettings?: CurrencySettings;
 }
 
 export interface PaymentMethod {

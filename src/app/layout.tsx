@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/context/language-provider';
 import { SettingsProvider } from '@/context/settings-provider';
 import { SaaSProvider } from '@/context/saas-provider';
+import { CurrencyProvider } from '@/context/currency-provider';
 
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' });
 const lato = Lato({
@@ -17,7 +18,7 @@ const lato = Lato({
   variable: '--font-lato',
 });
 const notoNastaliqUrdu = Noto_Nastaliq_Urdu({
-  subsets: ['arabic', 'urdu'],
+  subsets: ['arabic'],
   weight: ['400', '700'],
   variable: '--font-noto-nastaliq-urdu',
 });
@@ -39,15 +40,17 @@ export default function RootLayout({
           <ThemeProvider storageKey="app-ui-theme">
             <FirebaseClientProvider>
               <SettingsProvider>
-                <AuthProvider>
-                  <SaaSProvider> {/* SaaSProvider injected here */}
-                    <div className="flex min-h-screen flex-col">
-                      <Header />
-                      <main className="flex-1 bg-background">{children}</main> {/* Added bg-background class */}
-                    </div>
-                    <Toaster />
-                  </SaaSProvider>
-                </AuthProvider>
+                <CurrencyProvider>
+                  <AuthProvider>
+                    <SaaSProvider> {/* SaaSProvider injected here */}
+                      <div className="flex min-h-screen flex-col">
+                        <Header />
+                        <main className="flex-1 bg-background">{children}</main> {/* Added bg-background class */}
+                      </div>
+                      <Toaster />
+                    </SaaSProvider>
+                  </AuthProvider>
+                </CurrencyProvider>
               </SettingsProvider>
             </FirebaseClientProvider>
           </ThemeProvider>

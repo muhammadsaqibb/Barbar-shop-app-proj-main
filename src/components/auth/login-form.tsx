@@ -52,18 +52,24 @@ export default function LoginForm() {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data().enabled === false) {
-          await firebaseSignOut(auth);
-          toast({
-              variant: 'destructive',
-              title: t('account_disabled_title'),
-              description: t('account_disabled_desc'),
-          });
+        await firebaseSignOut(auth);
+        toast({
+          variant: 'destructive',
+          title: t('account_disabled_title'),
+          description: t('account_disabled_desc'),
+        });
       } else {
-          toast({
-            title: t('login_success_title'),
-            description: t('login_success_desc'),
-          });
+        const userData = userDoc.data();
+        toast({
+          title: t('login_success_title'),
+          description: t('login_success_desc'),
+        });
+
+        if (userData?.role === 'admin' || userData?.role === 'staff') {
+          router.push('/admin/dashboard');
+        } else {
           router.push('/');
+        }
       }
     } catch (error: any) {
       toast({
@@ -78,45 +84,45 @@ export default function LoginForm() {
 
   return (
     <div className="w-full">
-        <Form {...form}>
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+          <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-                <FormItem>
+              <FormItem>
                 <FormLabel>{t('email_label')}</FormLabel>
                 <FormControl>
-                    <Input type="email" placeholder="name@example.com" {...field} />
+                  <Input type="email" placeholder="name@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
-                </FormItem>
+              </FormItem>
             )}
-            />
-            <FormField
+          />
+          <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
-                <FormItem>
+              <FormItem>
                 <FormLabel>{t('password_label')}</FormLabel>
                 <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
-                </FormItem>
+              </FormItem>
             )}
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('signing_in_button')}</> : t('signin_button')}
-            </Button>
+          />
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t('signing_in_button')}</> : t('signin_button')}
+          </Button>
         </form>
-        </Form>
-        <div className="mt-4 text-center text-sm">
+      </Form>
+      <div className="mt-4 text-center text-sm">
         {t('dont_have_account')}{' '}
         <Link href="/register" className="underline text-primary">
-            {t('signup_link')}
+          {t('signup_link')}
         </Link>
-        </div>
+      </div>
     </div>
   );
 }

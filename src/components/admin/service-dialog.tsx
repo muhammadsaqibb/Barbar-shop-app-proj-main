@@ -31,6 +31,7 @@ import type { Service } from '@/types';
 import { useFirebase } from '@/firebase';
 import { collection, doc, setDoc, addDoc } from 'firebase/firestore';
 import useSound from '@/hooks/use-sound';
+import { useCurrency } from '@/context/currency-provider';
 
 const serviceSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -55,6 +56,7 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const playSound = useSound();
+  const { getCurrencySymbol } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof serviceSchema>>({
@@ -171,7 +173,7 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price (PKR)</FormLabel>
+                    <FormLabel>Price ({getCurrencySymbol()})</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="2500" {...field} />
                     </FormControl>
@@ -184,7 +186,7 @@ export function ServiceDialog({ isOpen, onOpenChange, service }: ServiceDialogPr
                 name="discountedPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Discounted Price (Optional)</FormLabel>
+                    <FormLabel>Discounted Price ({getCurrencySymbol()}) (Optional)</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="2200" {...field} value={field.value ?? ''} />
                     </FormControl>

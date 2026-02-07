@@ -1,4 +1,3 @@
-
 {
     "app_title_line1": "The",
     "app_title_line2": "Gentleman's",
@@ -54,10 +53,15 @@
     "register_page_title": "Create an Account",
     "register_page_desc": "Join us! It's quick and easy.",
     "name_label": "Name",
+    "shop_name_label": "Shop Name",
     "create_account_button": "Create Account",
     "creating_account_button": "Creating Account...",
     "already_have_account": "Already have an account?",
     "signin_link": "Sign in",
+    "book_as_customer": "Book as Customer",
+    "book_as_customer_desc": "Book appointments and track your haircut history easily.",
+    "register_your_shop": "Register Your Shop",
+    "register_your_shop_desc": "Manage your barbers, services, and grow your business today.",
     "registration_success_title": "Registration Successful",
     "registration_success_desc": "Your account has been created.",
     "registration_fail_title": "Registration Failed",
@@ -126,7 +130,25 @@
     "save_account_button": "Save",
     "saving_account_button": "Saving...",
     "no_online_payment_methods": "No online payment methods are configured. Please select 'Pay with Cash'.",
-    "accounts_for_transfer": "Accounts for Online Transfer"
+    "accounts_for_transfer": "Accounts for Online Transfer",
+    "walk_in_booking": "Walk-in Booking",
+    "walk_in_desc": "Manually create a booking for a walk-in customer.",
+    "customer_name": "Customer Name",
+    "phone_number": "Phone Number",
+    "select_services": "Select Services",
+    "payment_method": "Payment Method",
+    "payment_pending": "Pending",
+    "payment_paid": "Paid",
+    "payment_online": "Online",
+    "payment_cash": "Cash",
+    "quantity_label": "Qty",
+    "total_price": "Total Price",
+    "save_booking": "Save Booking",
+    "refer_and_earn": "Refer & Earn",
+    "referral_rewards": "Referral Rewards",
+    "referral_code_label": "Your Referral Code",
+    "referral_desc": "Invite your friends and earn discounts!",
+    "copy_code": "Copy Code",
+    "code_copied": "Code copied to clipboard!",
+    "share_whatsapp": "Share on WhatsApp"
 }
-
-    

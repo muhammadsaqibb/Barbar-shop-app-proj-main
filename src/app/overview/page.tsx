@@ -3,14 +3,15 @@
 import { useMemo } from 'react';
 import StaffAdminRoute from "@/components/admin/staff-admin-route";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, CheckCircle, XCircle, Wallet, BadgeCheck, UserX } from "lucide-react";
+import { Calendar, Clock, CheckCircle, XCircle, Wallet, BadgeCheck, UserX, Gift } from "lucide-react";
 import AppointmentsChart from "@/components/overview/appointments-chart";
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Appointment } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCurrency } from '@/context/currency-provider';
 
-const StatCard = ({ title, value, icon, description }: { title: string, value: string | number, icon: React.ReactNode, description?: string }) => (
+const StatCard = ({ title, value, icon, description }: { title: string, value: string | number, icon: React.ReactNode, description?: React.ReactNode }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -18,13 +19,14 @@ const StatCard = ({ title, value, icon, description }: { title: string, value: s
         </CardHeader>
         <CardContent>
             <div className="text-2xl font-bold">{value}</div>
-            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+            {description && <div className="text-xs text-muted-foreground">{description}</div>}
         </CardContent>
     </Card>
 );
 
 export default function OverviewPage() {
     const { firestore } = useFirebase();
+    const { formatPrice, currency } = useCurrency();
 
     const appointmentsQuery = useMemoFirebase(
         () => (firestore ? query(collection(firestore, 'appointments'), orderBy('createdAt', 'desc')) : null),
@@ -69,6 +71,10 @@ export default function OverviewPage() {
         const totalRevenue = completed.revenue;
         const totalSales = confirmed.revenue + completed.revenue;
 
+        // Referral Stats
+        const discountedAppointments = appointments.filter(apt => (apt.rewardApplied || 0) > 0);
+        const totalRewardsRedeemed = discountedAppointments.reduce((sum, apt) => sum + (apt.rewardApplied || 0), 0);
+
         return {
             totalRevenue,
             totalSales,
@@ -83,6 +89,8 @@ export default function OverviewPage() {
             cancelledRevenue: cancelled.revenue,
             noShowCount: noShow.count,
             noShowRevenue: noShow.revenue,
+            totalRewardsRedeemed,
+            discountedBookingsCount: discountedAppointments.length,
         };
     }, [appointments]);
 
@@ -129,15 +137,15 @@ export default function OverviewPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <StatCard
                         title="Total Sales"
-                        value={`PKR ${stats.totalSales.toLocaleString()}`}
+                        value={formatPrice(stats.totalSales)}
                         icon={<BadgeCheck className="h-4 w-4 text-primary" />}
-                        description="Confirmed + Completed"
+                        description={currency !== 'PKR' ? `Base: PKR ${stats.totalSales.toLocaleString()}` : "Confirmed + Completed"}
                     />
                     <StatCard
                         title="Total Revenue"
-                        value={`PKR ${stats.totalRevenue.toLocaleString()}`}
+                        value={formatPrice(stats.totalRevenue)}
                         icon={<Wallet className="h-4 w-4 text-muted-foreground" />}
-                        description="Finished appointments"
+                        description={currency !== 'PKR' ? `Base: PKR ${stats.totalRevenue.toLocaleString()}` : "Finished appointments"}
                     />
                     <StatCard
                         title="Total Bookings"
@@ -149,31 +157,67 @@ export default function OverviewPage() {
                         title="Pending"
                         value={stats.pendingCount}
                         icon={<Clock className="h-4 w-4 text-muted-foreground" />}
-                        description={`Value: PKR ${stats.pendingRevenue.toLocaleString()}`}
+                        description={
+                            <div className="flex flex-col">
+                                <span>Value: {formatPrice(stats.pendingRevenue)}</span>
+                                {currency !== 'PKR' && <span className="text-[10px] opacity-70">Base: PKR {stats.pendingRevenue.toLocaleString()}</span>}
+                            </div>
+                        }
                     />
                     <StatCard
                         title="Confirmed"
                         value={stats.confirmedCount}
                         icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />}
-                        description={`Value: PKR ${stats.confirmedRevenue.toLocaleString()}`}
+                        description={
+                            <div className="flex flex-col">
+                                <span>Value: {formatPrice(stats.confirmedRevenue)}</span>
+                                {currency !== 'PKR' && <span className="text-[10px] opacity-70">Base: PKR {stats.confirmedRevenue.toLocaleString()}</span>}
+                            </div>
+                        }
                     />
                     <StatCard
                         title="Completed"
                         value={stats.completedCount}
                         icon={<BadgeCheck className="h-4 w-4 text-muted-foreground" />}
-                        description={`Value: PKR ${stats.completedRevenue.toLocaleString()}`}
+                        description={
+                            <div className="flex flex-col">
+                                <span>Value: {formatPrice(stats.completedRevenue)}</span>
+                                {currency !== 'PKR' && <span className="text-[10px] opacity-70">Base: PKR {stats.completedRevenue.toLocaleString()}</span>}
+                            </div>
+                        }
                     />
                     <StatCard
                         title="Cancelled"
                         value={stats.cancelledCount}
                         icon={<XCircle className="h-4 w-4 text-muted-foreground" />}
-                        description={`Lost: PKR ${stats.cancelledRevenue.toLocaleString()}`}
+                        description={
+                            <div className="flex flex-col">
+                                <span>Lost: {formatPrice(stats.cancelledRevenue)}</span>
+                                {currency !== 'PKR' && <span className="text-[10px] opacity-70">Base: PKR {stats.cancelledRevenue.toLocaleString()}</span>}
+                            </div>
+                        }
                     />
                     <StatCard
                         title="No Shows"
                         value={stats.noShowCount}
                         icon={<UserX className="h-4 w-4 text-muted-foreground" />}
-                        description={`Lost: PKR ${stats.noShowRevenue.toLocaleString()}`}
+                        description={
+                            <div className="flex flex-col">
+                                <span>Lost: {formatPrice(stats.noShowRevenue)}</span>
+                                {currency !== 'PKR' && <span className="text-[10px] opacity-70">Base: PKR {stats.noShowRevenue.toLocaleString()}</span>}
+                            </div>
+                        }
+                    />
+                    <StatCard
+                        title="Referral Redemptions"
+                        value={formatPrice(stats.totalRewardsRedeemed || 0)}
+                        icon={<Gift className="h-4 w-4 text-emerald-500" />}
+                        description={
+                            <div className="flex flex-col">
+                                <span>{stats.discountedBookingsCount || 0} appointments discounted</span>
+                                {currency !== 'PKR' && (stats.totalRewardsRedeemed || 0) > 0 && <span className="text-[10px] opacity-70">Base: PKR {(stats.totalRewardsRedeemed || 0).toLocaleString()}</span>}
+                            </div>
+                        }
                     />
                 </div>
 

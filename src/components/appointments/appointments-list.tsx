@@ -8,44 +8,57 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '../ui/skeleton';
 import { useCollection, useFirebase, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { CountdownTimer } from '../ui/countdown-timer';
 
 const MobileClientAppointmentCard = ({ appointment }: { appointment: Appointment }) => {
-    const getStatusVariant = (status: Appointment['status']) => {
-        switch (status) {
-          case 'pending': return 'secondary';
-          case 'confirmed': return 'default';
-          case 'cancelled': case 'no-show': return 'destructive';
-          case 'completed': return 'outline';
-          default: return 'outline';
-        }
-    };
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg max-w-[80%] truncate">{appointment.services.map(s => `${s.name}${s.quantity && s.quantity > 1 ? ` x${s.quantity}` : ''}`).join(', ')}</CardTitle>
-                    <Badge variant={getStatusVariant(appointment.status)} className="capitalize">{appointment.status}</Badge>
-                </div>
-                 <CardDescription>
-                    {appointment.date} at {appointment.time}
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Price:</span>
-                    <span className="font-bold">PKR {appointment.totalPrice?.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Payment:</span>
-                     <Badge variant={appointment.paymentStatus === 'paid' ? 'default' : 'secondary'} className="capitalize">
-                        {appointment.paymentStatus}
-                    </Badge>
-                </div>
-            </CardContent>
-        </Card>
-    );
+  const { firestore } = useFirebase();
+  const getStatusVariant = (status: Appointment['status']) => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'confirmed': return 'default';
+      case 'cancelled': case 'no-show': return 'destructive';
+      case 'completed': return 'outline';
+      default: return 'outline';
+    }
+  };
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg max-w-[80%] truncate">{appointment.services.map(s => `${s.name}${s.quantity && s.quantity > 1 ? ` x${s.quantity}` : ''}`).join(', ')}</CardTitle>
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant={getStatusVariant(appointment.status)} className="capitalize">{appointment.status}</Badge>
+            {appointment.status === 'pending' && <CountdownTimer createdAt={appointment.createdAt} onExpire={async () => {
+              if (!firestore) return;
+              try {
+                await updateDoc(doc(firestore, 'appointments', appointment.id), {
+                  status: 'cancelled',
+                  notes: (appointment.notes || '') + ' [Auto: Expired (2m)]'
+                });
+              } catch (e) { console.error(e); }
+            }} />}
+          </div>
+        </div>
+        <CardDescription>
+          {appointment.date} at {appointment.time}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Total Price:</span>
+          <span className="font-bold">PKR {appointment.totalPrice?.toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Payment:</span>
+          <Badge variant={appointment.paymentStatus === 'paid' ? 'default' : 'secondary'} className="capitalize">
+            {appointment.paymentStatus}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 
@@ -59,6 +72,18 @@ export default function AppointmentsList() {
   );
 
   const { data: appointments, isLoading: loading, error } = useCollection<Appointment>(appointmentsCollectionRef);
+
+  const handleAutoCancel = async (id: string, notes?: string) => {
+    if (!firestore) return;
+    try {
+      await updateDoc(doc(firestore, 'appointments', id), {
+        status: 'cancelled',
+        notes: (notes || '') + ' [Auto: Expired (2m)]'
+      });
+    } catch (error) {
+      console.error('Failed to auto-cancel:', error);
+    }
+  };
 
   const getStatusVariant = (status: Appointment['status']) => {
     switch (status) {
@@ -78,11 +103,11 @@ export default function AppointmentsList() {
 
   if (loading) {
     return (
-        <div className="space-y-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-        </div>
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
     )
   }
 
@@ -98,44 +123,45 @@ export default function AppointmentsList() {
     <>
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-          {appointments.map((apt) => (
-              <MobileClientAppointmentCard key={apt.id} appointment={apt} />
-          ))}
+        {appointments.map((apt) => (
+          <MobileClientAppointmentCard key={apt.id} appointment={apt} />
+        ))}
       </div>
-      
+
       {/* Desktop View */}
       <div className="hidden md:block rounded-md border border-border/20">
         <Table>
-            <TableHeader>
-                <TableRow>
-                <TableHead>Service(s)</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {appointments.map((apt) => (
-                <TableRow key={apt.id}>
-                    <TableCell className="font-medium">{apt.services.map(s => `${s.name}${s.quantity && s.quantity > 1 ? ` x${s.quantity}` : ''}`).join(', ')}</TableCell>
-                    <TableCell>PKR {apt.totalPrice?.toLocaleString()}</TableCell>
-                    <TableCell>
-                        <Badge variant={apt.paymentStatus === 'paid' ? 'default' : 'secondary'} className="capitalize">
-                            {apt.paymentStatus}
-                        </Badge>
-                    </TableCell>
-                    <TableCell>{apt.date}</TableCell>
-                    <TableCell>{apt.time}</TableCell>
-                    <TableCell className="text-right">
-                    <Badge variant={getStatusVariant(apt.status)} className="capitalize">
-                        {apt.status}
-                    </Badge>
-                    </TableCell>
-                </TableRow>
-                ))}
-            </TableBody>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Service(s)</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead className="text-right">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {appointments.map((apt) => (
+              <TableRow key={apt.id}>
+                <TableCell className="font-medium">{apt.services.map(s => `${s.name}${s.quantity && s.quantity > 1 ? ` x${s.quantity}` : ''}`).join(', ')}</TableCell>
+                <TableCell>PKR {apt.totalPrice?.toLocaleString()}</TableCell>
+                <TableCell>
+                  <Badge variant={apt.paymentStatus === 'paid' ? 'default' : 'secondary'} className="capitalize">
+                    {apt.paymentStatus}
+                  </Badge>
+                </TableCell>
+                <TableCell>{apt.date}</TableCell>
+                <TableCell>{apt.time}</TableCell>
+                <TableCell className="text-right">
+                  <Badge variant={getStatusVariant(apt.status)} className="capitalize">
+                    {apt.status}
+                  </Badge>
+                  {apt.status === 'pending' && <div className="mt-1"><CountdownTimer createdAt={apt.createdAt} onExpire={() => handleAutoCancel(apt.id, apt.notes)} /></div>}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
         </Table>
       </div>
     </>

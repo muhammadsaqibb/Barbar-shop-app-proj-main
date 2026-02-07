@@ -14,17 +14,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, User as UserIcon, LayoutDashboard, Users, Sparkles, Receipt, Menu, BookCopy, Package, Scissors, CreditCard, Lock } from 'lucide-react';
-import Logo from '../logo';
+import { LogOut, Settings, User as UserIcon, LayoutDashboard, Users, Sparkles, Receipt, Menu, BookCopy, Package, Scissors, CreditCard, Lock, Gift } from 'lucide-react';
+import type { ShopSettings } from '@/types';
+import LogoWithUpload from '../logo-with-upload';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle, SheetDescription } from '../ui/sheet';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import useSound from '@/hooks/use-sound';
 import { ModeToggle } from '../mode-toggle';
 import { useTranslation } from '@/context/language-provider';
 import { LanguageSwitcher } from '../language-switcher';
+import { CurrencySwitcher } from '../currency-switcher';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useSettings } from '@/context/settings-provider';
@@ -70,6 +72,10 @@ export default function Header() {
 
     prevPendingCount.current = pendingCount;
   }, [pendingCount, toast, playSound, t]);
+
+  const shopSettingsRef = useMemoFirebase(() => firestore ? doc(firestore, 'shopSettings', 'config') : null, [firestore]);
+  const { data: shopSettings } = useDoc<ShopSettings>(shopSettingsRef);
+  const isReferralEnabled = shopSettings?.referralSettings?.enabled ?? false;
 
   const handleSignOut = async () => {
     await signOut();
@@ -141,9 +147,16 @@ export default function Header() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
             <div className="flex-1 p-4 flex flex-col gap-2 overflow-y-auto">
-              <MobileLink href="/book" icon={<Scissors />}>{t('book_cut_title')}</MobileLink>
-              <MobileLink href="/packages" icon={<Package />}>{t('packages_title')}</MobileLink>
-              <MobileLink href="/my-appointments" icon={<BookCopy />}>{t('history_title')}</MobileLink>
+              {user.role === 'client' && (
+                <>
+                  <MobileLink href="/book" icon={<Scissors />}>{t('book_cut_title')}</MobileLink>
+                  <MobileLink href="/packages" icon={<Package />}>{t('packages_title')}</MobileLink>
+                  <MobileLink href="/my-appointments" icon={<BookCopy />}>{t('history_title')}</MobileLink>
+                  {isReferralEnabled && (
+                    <MobileLink href="/referrals" icon={<Gift />}>{t('refer_and_earn')}</MobileLink>
+                  )}
+                </>
+              )}
 
               {(user.role === 'admin' || (user.role === 'staff' && user.permissions?.canViewOverview)) && (
                 <ProtectedAction featureId="overview" href="/overview">
@@ -174,7 +187,7 @@ export default function Header() {
                     <MobileLink href="/admin/expenses" icon={<Receipt />}>{t('manage_expenses')}</MobileLink>
                   </ProtectedAction>
                   <ProtectedAction featureId="opening_hours" href="/admin/settings">
-                    <MobileLink href="/admin/settings" icon={<Settings />}>{t('opening_hours')}</MobileLink>
+                    <MobileLink href="/admin/settings" icon={<Settings />}>{t('shop_settings') || 'Shop Settings'}</MobileLink>
                   </ProtectedAction>
                   <ProtectedAction featureId="payment_settings" href="/admin/payment-settings">
                     <MobileLink href="/admin/payment-settings" icon={<CreditCard />}>{t('link_account')}</MobileLink>
@@ -215,15 +228,24 @@ export default function Header() {
   );
 
 
+  const isBookingLimitReached = currentShop?.plan === 'free' && (currentShop?.bookingCount || 0) >= 100;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-[#9575CD] backdrop-blur-sm text-white">
+      {user?.role === 'admin' && isBookingLimitReached && (
+        <div className="bg-amber-500 text-white text-center py-2 px-4 text-sm font-bold animate-in slide-in-from-top duration-500">
+          ⚠️ You have reached your 100 booking limit. Please <Link href="/admin/upgrade" className="underline hover:text-amber-100 transition-colors">Upgrade Plan</Link> for unlimited usage.
+        </div>
+      )}
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-2 flex items-center space-x-2 lg:mr-6">
-          <Logo />
-          <div className="grid font-bold font-headline uppercase leading-tight text-xs text-center">
-            <span>{settings.appName}</span>
-          </div>
-        </Link>
+        <div className="mr-2 flex items-center space-x-2 lg:mr-6">
+          <LogoWithUpload src={currentShop?.logo} shopId={currentShop?.id} />
+          <Link href="/">
+            <div className="grid font-bold font-headline uppercase leading-tight text-xs text-center">
+              <span>{settings.appName}</span>
+            </div>
+          </Link>
+        </div>
 
         <div className="hidden lg:flex items-center space-x-2 text-sm font-medium">
           {user && <NavLinks />}
@@ -256,6 +278,7 @@ export default function Header() {
                 </Link>
               </Button>
             )}
+            <CurrencySwitcher />
             <ModeToggle />
             {loading ? (
               <Skeleton className="h-8 w-8 rounded-full" />
@@ -293,12 +316,24 @@ export default function Header() {
                               </div>
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href="/my-appointments">
-                                <BookCopy className="mr-2 h-4 w-4" />
-                                <span>{t('history_title')}</span>
-                              </Link>
-                            </DropdownMenuItem>
+                            {user.role === 'client' && (
+                              <>
+                                <DropdownMenuItem asChild>
+                                  <Link href="/my-appointments">
+                                    <BookCopy className="mr-2 h-4 w-4" />
+                                    <span>{t('history_title')}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {isReferralEnabled && (user.role === 'client' || user.role === 'admin' || user.role === 'staff') && (
+                              <DropdownMenuItem asChild>
+                                <Link href="/referrals">
+                                  <Gift className="mr-2 h-4 w-4" />
+                                  <span>{t('refer_and_earn')}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
                             {(user.role === 'admin' || (user?.role === 'staff' && user.permissions?.canViewOverview)) && (
                               <ProtectedAction featureId="overview" href="/overview">
                                 <DropdownMenuItem asChild>
@@ -362,7 +397,7 @@ export default function Header() {
                                   <DropdownMenuItem asChild>
                                     <Link href="/admin/settings">
                                       <Settings className="mr-2 h-4 w-4" />
-                                      <span>{t('opening_hours')}</span>
+                                      <span>{t('shop_settings') || 'Shop Settings'}</span>
                                     </Link>
                                   </DropdownMenuItem>
                                 </ProtectedAction>

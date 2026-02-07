@@ -28,6 +28,7 @@ import type { Expense } from '@/types';
 import { useFirebase } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, addDoc } from 'firebase/firestore';
 import useSound from '@/hooks/use-sound';
+import { useCurrency } from '@/context/currency-provider';
 
 const expenseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -45,6 +46,7 @@ export function ExpenseDialog({ isOpen, onOpenChange, expense }: ExpenseDialogPr
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const playSound = useSound();
+  const { getCurrencySymbol } = useCurrency();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof expenseSchema>>({
@@ -76,9 +78,9 @@ export function ExpenseDialog({ isOpen, onOpenChange, expense }: ExpenseDialogPr
     playSound('click');
     setIsSubmitting(true);
     if (!firestore) {
-        toast({ variant: 'destructive', title: 'Save Failed', description: 'Database not available.' });
-        setIsSubmitting(false);
-        return;
+      toast({ variant: 'destructive', title: 'Save Failed', description: 'Database not available.' });
+      setIsSubmitting(false);
+      return;
     }
 
     try {
@@ -138,17 +140,17 @@ export function ExpenseDialog({ isOpen, onOpenChange, expense }: ExpenseDialogPr
                 </FormItem>
               )}
             />
-             <FormField
+            <FormField
               control={form.control}
               name="amount"
               render={({ field }) => (
-                  <FormItem>
-                  <FormLabel>Amount (PKR)</FormLabel>
+                <FormItem>
+                  <FormLabel>Amount ({getCurrencySymbol()})</FormLabel>
                   <FormControl>
-                      <Input type="number" placeholder="5000" {...field} />
+                    <Input type="number" placeholder="5000" {...field} />
                   </FormControl>
                   <FormMessage />
-                  </FormItem>
+                </FormItem>
               )}
             />
             <FormField

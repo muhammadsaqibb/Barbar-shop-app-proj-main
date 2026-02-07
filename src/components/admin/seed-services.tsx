@@ -9,9 +9,10 @@ import { Button } from "../ui/button";
 interface SeedServicesProps {
     onSeed?: () => void;
     variant?: 'default' | 'card';
+    shopId?: string;
 }
 
-export const SeedServices = ({ onSeed, variant = 'default' }: SeedServicesProps) => {
+export const SeedServices = ({ onSeed, variant = 'default', shopId }: SeedServicesProps) => {
     const { firestore } = useFirebase();
     const [seeding, setSeeding] = useState(false);
     const { toast } = useToast();
@@ -27,13 +28,13 @@ export const SeedServices = ({ onSeed, variant = 'default' }: SeedServicesProps)
         }
         setSeeding(true);
         try {
-            await seedDatabase(firestore);
+            await seedDatabase(firestore, shopId);
             toast({
                 title: "Database Seeded!",
                 description: "Default services and barbers have been added.",
             });
             if (onSeed) {
-              onSeed();
+                onSeed();
             }
         } catch (error) {
             console.error("Failed to seed database:", error);
@@ -60,10 +61,10 @@ export const SeedServices = ({ onSeed, variant = 'default' }: SeedServicesProps)
             </div>
         );
     }
-    
+
     return (
         <div className="text-center py-4">
-             <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4">
                 No services have been configured yet. As an admin, you can add them.
             </p>
             <Button onClick={handleSeed} disabled={seeding}>

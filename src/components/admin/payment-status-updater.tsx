@@ -17,7 +17,7 @@ export default function PaymentStatusUpdater({ appointment }: PaymentStatusUpdat
     const { firestore } = useFirebase();
     const { toast } = useToast();
 
-    const handleStatusChange = async (newStatus: 'paid' | 'unpaid') => {
+    const handleStatusChange = async (newStatus: 'paid' | 'unpaid' | 'pending') => {
         if (!firestore) return;
         setLoading(true);
         try {
@@ -41,9 +41,9 @@ export default function PaymentStatusUpdater({ appointment }: PaymentStatusUpdat
     return (
         <div className="flex items-center gap-2">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            <Select 
-                defaultValue={appointment.paymentStatus} 
-                onValueChange={(value: 'paid' | 'unpaid') => handleStatusChange(value)}
+            <Select
+                defaultValue={appointment.paymentStatus}
+                onValueChange={(value: 'paid' | 'unpaid' | 'pending') => handleStatusChange(value)}
                 disabled={loading}
             >
                 <SelectTrigger className="w-full">
@@ -52,6 +52,7 @@ export default function PaymentStatusUpdater({ appointment }: PaymentStatusUpdat
                 <SelectContent>
                     <SelectItem value="unpaid">Unpaid</SelectItem>
                     <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
             </Select>
         </div>

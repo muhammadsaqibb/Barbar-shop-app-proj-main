@@ -1,4 +1,3 @@
-
 {
     "app_title_line1": "دی",
     "app_title_line2": "جینٹلمینز",
@@ -54,10 +53,15 @@
     "register_page_title": "اکاؤنٹ بنائیں",
     "register_page_desc": "ہمارے ساتھ شامل ہوں! یہ تیز اور آسان ہے۔",
     "name_label": "نام",
+    "shop_name_label": "دکان کا نام",
     "create_account_button": "اکاؤنٹ بنائیں",
     "creating_account_button": "اکاؤنٹ بنایا جا رہا ہے...",
     "already_have_account": "پہلے سے اکاؤنٹ ہے؟",
     "signin_link": "سائن ان کریں",
+    "book_as_customer": "بطور گاہک بک کریں",
+    "book_as_customer_desc": "اپوائنٹمنٹس بک کریں اور ہسٹری ٹریک کریں۔",
+    "register_your_shop": "اپنی دکان رجسٹر کریں",
+    "register_your_shop_desc": "اپنے کاروبار کا انتظام کریں اور اسے بڑھائیں۔",
     "registration_success_title": "رجسٹریشن کامیاب",
     "registration_success_desc": "آپ کا اکاؤنٹ بنا دیا گیا ہے۔",
     "registration_fail_title": "رجسٹریشن ناکام",
@@ -126,7 +130,25 @@
     "save_account_button": "محفوظ کریں",
     "saving_account_button": "محفوظ ہو رہا ہے...",
     "no_online_payment_methods": "کوئی آن لائن ادائیگی کا طریقہ ترتیب نہیں دیا گیا ہے۔ براہ کرم 'نقد ادائیگی' منتخب کریں۔",
-    "accounts_for_transfer": "آن لائن منتقلی کے لیے اکاؤنٹس"
+    "accounts_for_transfer": "آن لائن منتقلی کے لیے اکاؤنٹس",
+    "walk_in_booking": "واک ان بکنگ",
+    "walk_in_desc": "کسی واک ان کسٹمر کے لیے دستی طور پر بکنگ بنائیں۔",
+    "customer_name": "گاہک کا نام",
+    "phone_number": "فون نمبر",
+    "select_services": "خدمات منتخب کریں",
+    "payment_method": "ادائیگی کا طریقہ",
+    "payment_pending": "زیر التواء",
+    "payment_paid": "ادائیگی ہو گئی",
+    "payment_online": "آن لائن",
+    "payment_cash": "نقد",
+    "quantity_label": "تعداد",
+    "total_price": "کل قیمت",
+    "save_booking": "بکنگ محفوظ کریں",
+    "refer_and_earn": "ریفر کریں اور کمائیں",
+    "referral_rewards": "ریفرل انعامات",
+    "referral_code_label": "آپ کا ریفرل کوڈ",
+    "referral_desc": "اپنے دوستوں کو مدعو کریں اور ڈسکاؤنٹ حاصل کریں!",
+    "copy_code": "کوڈ کاپی کریں",
+    "code_copied": "کوڈ کلپ بورڈ پر کاپی ہو گیا!",
+    "share_whatsapp": "واٹس ایپ پر شیئر کریں"
 }
-
-    

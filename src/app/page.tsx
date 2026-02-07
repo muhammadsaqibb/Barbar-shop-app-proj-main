@@ -1,19 +1,18 @@
 
-
 "use client";
 
 import { useAuth } from "@/components/auth-provider";
-import { useFirebase } from "@/firebase";
+import { useFirebase, useDoc, useMemoFirebase } from "@/firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   Scissors, Sparkles, LayoutDashboard, Package, BookCopy, Receipt,
-  LogIn, Users, Settings, User as UserIcon, RotateCcw,
+  LogIn, Users, Settings, User as UserIcon, RotateCcw, History, Plus, Gift
 } from "lucide-react";
 import { useTranslation } from "@/context/language-provider";
 import { ProtectedAction } from "@/components/admin/protected-action";
-import type { AppUser } from "@/types";
+import type { AppUser, ShopSettings } from "@/types";
 import type { Translations } from "@/context/language-provider";
 import { useState, useEffect, useMemo } from "react";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
@@ -51,7 +50,7 @@ interface ActionCardData {
   icon: React.ReactNode;
   titleKey: keyof Translations;
   descriptionKey: keyof Translations;
-  isVisible: (user: AppUser | null) => boolean;
+  isVisible: (user: AppUser | null, isReferralEnabled: boolean) => boolean;
 }
 
 const ALL_ACTION_CARDS: ActionCardData[] = [
@@ -104,12 +103,36 @@ const ALL_ACTION_CARDS: ActionCardData[] = [
     isVisible: (user) => user?.role === 'admin',
   },
   {
+    id: 'walk_in',
+    href: '/admin/walk-in',
+    icon: <Plus className="h-6 w-6" />,
+    titleKey: 'walk_in_booking',
+    descriptionKey: 'walk_in_desc',
+    isVisible: (user) => user?.role === 'admin' || user?.role === 'staff',
+  },
+  {
     id: 'book_cut',
     href: '/book',
     icon: <Scissors className="h-6 w-6" />,
     titleKey: 'book_cut_title',
     descriptionKey: 'book_cut_desc',
-    isVisible: (user) => !!user,
+    isVisible: (user) => user?.role === 'client',
+  },
+  {
+    id: 'history',
+    href: '/my-appointments',
+    icon: <History className="h-6 w-6" />,
+    titleKey: 'history_title',
+    descriptionKey: 'history_desc',
+    isVisible: (user) => user?.role === 'client',
+  },
+  {
+    id: 'refer_earn',
+    href: '/referrals',
+    icon: <Gift className="h-6 w-6" />,
+    titleKey: 'refer_and_earn',
+    descriptionKey: 'referral_desc',
+    isVisible: (user, isEnabled) => (user?.role === 'client' || user?.role === 'admin' || user?.role === 'staff') && isEnabled,
   },
   {
     id: 'packages',
@@ -117,7 +140,7 @@ const ALL_ACTION_CARDS: ActionCardData[] = [
     icon: <Package className="h-6 w-6" />,
     titleKey: 'packages_title',
     descriptionKey: 'packages_desc',
-    isVisible: (user) => !!user,
+    isVisible: (user) => user?.role === 'client',
   },
   // Guest Cards
   {
@@ -166,7 +189,12 @@ export default function Home() {
   );
 
   const displayName = formatUserDisplayName(user?.name, user?.email);
-  const visibleCards = useMemo(() => ALL_ACTION_CARDS.filter(card => card.isVisible(user)), [user]);
+
+  const shopSettingsRef = useMemoFirebase(() => firestore ? doc(firestore, 'shopSettings', 'config') : null, [firestore]);
+  const { data: shopSettings } = useDoc<ShopSettings>(shopSettingsRef);
+  const isReferralEnabled = shopSettings?.referralSettings?.enabled ?? false;
+
+  const visibleCards = useMemo(() => ALL_ACTION_CARDS.filter(card => card.isVisible(user, isReferralEnabled)), [user, isReferralEnabled]);
 
   useEffect(() => {
     const savedOrder = user?.homepageLayout;
